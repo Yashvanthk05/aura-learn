@@ -1,0 +1,31 @@
+[project]
+name = "Auralearn"
+version = "0.1.0"
+description = """AuraLearn API provides comprehensive document processing capabilities:
+    - **PDF Ingestion**: Upload and process PDF documents with intelligent chunking
+    - **Extractive Summarization**: Extract key sentences using BiLSTM neural model
+    - **Abstractive Summarization**: Generate concise summaries using fine-tuned T5
+    - **Audiobook Generation**: Convert text to natural-sounding speech with TTS
+    - **Complete Pipeline**: End-to-end processing from PDF to audiobook"""
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "coqui-tts",
+    "faiss-cpu",
+    "fastapi",
+    "nltk",
+    "numpy",
+    "pillow",
+    "pydantic",
+    "pydantic-settings",
+    "pymupdf",
+    "python-multipart",
+    "rank-bm25",
+    "scikit-learn",
+    "scipy",
+    "sentence-transformers",
+    "sentencepiece",
+    "torch",
+    "transformers",
+    "uvicorn",
+]
