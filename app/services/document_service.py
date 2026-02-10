@@ -5,8 +5,7 @@ import json
 import uuid
 from pathlib import Path
 from typing import List, Dict, Optional
-from app.utils.pdf_processor import PDFProcessor, TextPreprocessor
-
+from app.utils.pdf_processor import DocumentProcessor, TextPreprocessor
 
 class DocumentManager:
     
@@ -15,7 +14,7 @@ class DocumentManager:
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(parents=True, exist_ok=True)
         
-        self.pdf_processor = PDFProcessor()
+        self.doc_processor = DocumentProcessor()
         self.preprocessor = TextPreprocessor()
     
     def process_document(self, pdf_path: str, document_id: Optional[str] = None) -> Dict:
@@ -23,7 +22,7 @@ class DocumentManager:
         if document_id is None:
             document_id = str(uuid.uuid4())
         
-        chunks = self.pdf_processor.process_pdf(pdf_path)
+        chunks = self.doc_processor.process_file(pdf_path)
         
         processed_chunks = self.preprocessor.preprocess_chunks(chunks)
         

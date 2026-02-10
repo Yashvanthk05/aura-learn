@@ -16,3 +16,5 @@ rank-bm25
 scikit-learn
 coqui-tts
 scipy
+python-pptx
+python-docx
