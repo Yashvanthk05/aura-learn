@@ -18,3 +18,6 @@ coqui-tts
 scipy
 python-pptx
 python-docx
+lime
+shap
+matplotlib

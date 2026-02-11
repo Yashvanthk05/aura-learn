@@ -18,6 +18,9 @@ async def health_check():
             "audiobook_generator": svc.audiobook_generator is not None,
             "session_manager": svc.session_manager is not None,
             "chat_service": svc.chat_service is not None,
-            "vector_stores": len(svc.vector_stores)
+            "vector_stores": len(svc.vector_stores),
+            "xai_extractive": svc.extractive_summarizer is not None,
+            "xai_abstractive": svc.abstractive_summarizer is not None,
+            "xai_search": True,
         }
     )
