@@ -7,6 +7,7 @@ from .chat_controller import router as chat_router
 from .search_controller import router as search_router
 from .health_controller import router as health_router
 from .xai_controller import router as xai_router
+from .transcription_controller import router as transcription_router
 
 router = APIRouter()
 router.include_router(upload_router)
@@ -17,3 +18,4 @@ router.include_router(chat_router)
 router.include_router(search_router)
 router.include_router(health_router)
 router.include_router(xai_router)
+router.include_router(transcription_router)

@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     SENTENCE_ENCODER: str = "all-MiniLM-L6-v2"
     TTS_MODEL: str = "tts_models/multilingual/multi-dataset/xtts_v2"
     IMAGE_CAPTION_MODEL: str = "Salesforce/blip-image-captioning-base"
+    WHISPER_MODEL_SIZE: str = "base"
+    WHISPER_DEVICE: str = "cpu"
     
     MAX_PDF_SIZE: int = 50 * 1024 * 1024
     MAX_AUDIO_SIZE: int = 10 * 1024 * 1024
