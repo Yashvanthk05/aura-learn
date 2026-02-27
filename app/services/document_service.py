@@ -49,10 +49,22 @@ class DocumentManager:
         
         return {
             "document_id": document_id,
-            "filename": chunks[0]["source_name"] if chunks else "unknown",
+            "filename": self._strip_uuid_prefix(chunks[0]["source_name"]) if chunks else "unknown",
             "num_chunks": len(chunks),
             "chunks": chunks
         }
+    
+    @staticmethod
+    def _strip_uuid_prefix(name: str) -> str:
+        """Remove the leading {uuid}_ prefix from source_name."""
+        parts = name.split("_", 1)
+        if len(parts) == 2:
+            try:
+                uuid.UUID(parts[0])
+                return parts[1]
+            except ValueError:
+                pass
+        return name
     
     def get_chunks(self, document_id: str, chunk_ids: Optional[List[int]] = None) -> Optional[List[Dict]]:
        

@@ -1,0 +1,190 @@
+@import "tailwindcss";
+@font-face {
+  font-family: "Martian Grotesk";
+  font-weight: 300;
+  font-display: swap;
+  src: url("/fonts/MartianGrotesk-StdLt.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Martian Grotesk";
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/MartianGrotesk-StdRg.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Martian Grotesk";
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/MartianGrotesk-StdMd.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Martian Grotesk";
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/MartianGrotesk-StdBd.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Martian Mono";
+  font-weight: 300;
+  font-display: swap;
+  src: url("/fonts/MartianMono-StdLt.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Martian Mono";
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/MartianMono-StdRg.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Martian Mono";
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/MartianMono-StdMd.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Martian Mono";
+  font-weight: 700;
+  font-display: swap;
+  src: url("/fonts/MartianMono-StdBd.woff2") format("woff2");
+}
+:root {
+  /* Background tones */
+  --bg-base: #0a0a0b;
+  --bg-surface: #111113;
+  --bg-elevated: #18181b;
+  --bg-overlay: #1f1f23;
+  --bg-hover: #27272b;
+
+  /* Foreground / text */
+  --fg-primary: #ededef;
+  --fg-secondary: #a0a0a8;
+  --fg-tertiary: #6b6b74;
+  --fg-muted: #4a4a52;
+
+  /* Accent */
+  --accent: #4ec589;
+  --accent-hover: #83f4bc;
+  --accent-muted: #83f4bc25;
+
+  /* Borders */
+  --border: #232328;
+  --border-hover: #333338;
+  --border-active: #4a4a52;
+
+  /* Semantic */
+  --success: #7efcac;
+  --warning: #ffd761;
+  --error: #fa8989;
+  --info: #6992d5;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  /* Fonts */
+  --font-sans: "Martian Grotesk", system-ui, -apple-system, sans-serif;
+  --font-mono: "Martian Mono", ui-monospace, monospace;
+}
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    background: var(--bg-base);
+    color: var(--fg-primary);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-hover);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-active);
+}
+input[type="range"].slider-styled {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-elevated);
+  outline: none;
+  cursor: pointer;
+}
+
+input[type="range"].slider-styled::-webkit-slider-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-elevated);
+}
+
+input[type="range"].slider-styled::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg-surface);
+  box-shadow: 0 0 0 2px var(--accent-muted), 0 1px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+input[type="range"].slider-styled::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 3px var(--accent-muted), 0 2px 8px rgba(78, 197, 137, 0.3);
+}
+
+input[type="range"].slider-styled::-moz-range-track {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-elevated);
+  border: none;
+}
+
+input[type="range"].slider-styled::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg-surface);
+  box-shadow: 0 0 0 2px var(--accent-muted), 0 1px 4px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+}
+
+input[type="range"].slider-styled::-moz-range-thumb:hover {
+  transform: scale(1.15);
+  box-shadow: 0 0 0 3px var(--accent-muted), 0 2px 8px rgba(78, 197, 137, 0.3);
+}
+

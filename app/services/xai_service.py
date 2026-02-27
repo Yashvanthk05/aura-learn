@@ -348,7 +348,7 @@ class ExplainableAbstractiveService:
         token_probs = self._get_token_probabilities(text, full_summary)
 
         return {
-            "original_text_sentences": len(sentences),
+            "original_text_sentences": sentences,
             "summary": full_summary,
             "summary_word_count": len(full_summary.split()),
             "compression_ratio": round(
