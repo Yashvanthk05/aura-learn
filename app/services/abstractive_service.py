@@ -47,12 +47,11 @@ class AbstractiveSummarizer:
                 max_length=max_length,
                 min_length=min_length,
                 num_beams=num_beams,
+                num_beam_groups=4,
                 length_penalty=length_penalty,
                 early_stopping=True,
                 no_repeat_ngram_size=no_repeat_ngram_size,
                 repetition_penalty=repetition_penalty,
-                temperature=temperature,
-                top_p=top_p,
                 diversity_penalty=diversity_penalty,
                 do_sample=False
             )
