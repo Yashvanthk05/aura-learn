@@ -30,15 +30,29 @@ class ExplainableExtractiveService:
             return {"error": "No valid sentences found in text"}
 
         if len(sentences) <= num_sentences:
+            all_indices = list(range(len(sentences)))
+            sentence_explanations = [
+                {
+                    "index": i,
+                    "text": s,
+                    "importance_score": 1.0,
+                    "is_selected": True,
+                    "sensitivity": 0.0,
+                    "word_count": len(s.split()),
+                }
+                for i, s in enumerate(sentences)
+            ]
             return {
                 "summary": " ".join(sentences),
-                "explanation": {
-                    "note": "Text has fewer sentences than requested; returning all.",
-                    "sentences": [
-                        {"index": i, "text": s, "score": 1.0}
-                        for i, s in enumerate(sentences)
-                    ]
-                }
+                "num_sentences_input": len(sentences),
+                "num_sentences_selected": len(sentences),
+                "selected_indices": all_indices,
+                "average_score_selected": 1.0,
+                "average_score_all": 1.0,
+                "score_distribution": {"min": 1.0, "max": 1.0, "std": 0.0},
+                "sentences": sentence_explanations,
+                "explanation_methods": ["all_sentences_selected"],
+                "xai_type": "post-hoc + deep_explanation",
             }
 
         # 1. Get base scores
@@ -287,10 +301,11 @@ class ExplainableAbstractiveService:
         text: str,
         max_length: int = 150,
         min_length: int = 40,
+        generate_shap: bool = False,
     ) -> Dict:
         """
         Explain abstractive summary by measuring which input sentences
-        contribute most to the generated output.
+        contribute most to the generated output. Also computes SHAP values if requested.
         """
         sentences = sent_tokenize(text)
         sentences = [s.strip() for s in sentences if len(s.split()) >= 3]
@@ -347,6 +362,18 @@ class ExplainableAbstractiveService:
         # Get decoder token-level log probabilities
         token_probs = self._get_token_probabilities(text, full_summary)
 
+        # Generate SHAP text attribution if requested
+        shap_explanation = None
+        if generate_shap:
+            shap_explanation = self._generate_shap_explanation(text)
+
+        explanation_methods = [
+            "leave_one_out_attribution",
+            "token_confidence_scores",
+        ]
+        if shap_explanation:
+            explanation_methods.append("shap_text_attribution")
+
         return {
             "original_text_sentences": len(sentences),
             "summary": full_summary,
@@ -357,12 +384,47 @@ class ExplainableAbstractiveService:
             "sentence_contributions": contributions,
             "most_influential_sentence": contributions[0] if contributions else None,
             "token_confidence": token_probs,
-            "explanation_methods": [
-                "leave_one_out_attribution",
-                "token_confidence_scores",
-            ],
+            "shap_explanation": shap_explanation,
+            "explanation_methods": explanation_methods,
             "xai_type": "post-hoc_sensitivity_analysis",
         }
+
+    def _generate_shap_explanation(self, text: str) -> Optional[Dict]:
+        """Generate SHAP values for the summarization using huggingface pipeline."""
+        try:
+            import shap
+            from transformers import pipeline
+            from packaging import version
+            
+            # Create a pipeline from the existing model and tokenizer
+            pipe = pipeline(
+                "summarization", 
+                model=self.model, 
+                tokenizer=self.tokenizer, 
+                device=self.device.index if self.device.type == "cuda" else -1
+            )
+            
+            explainer = shap.Explainer(pipe)
+            # Use a smaller text if it's too long to prevent extremely slow computation
+            # SHAP is O(N^2) or worse for text generation
+            max_words_shap = 150
+            words = text.split()
+            if len(words) > max_words_shap:
+                short_text = " ".join(words[:max_words_shap])
+            else:
+                short_text = text
+                
+            shap_values = explainer([short_text])
+            
+            # Format outputs
+            return {
+                "input_tokens": list(shap_values.data[0]),
+                "output_tokens": list(shap_values.output_names),
+                "shap_values": [list(val) for val in shap_values.values[0]]
+            }
+        except Exception as e:
+            print(f"WARN: SHAP explanation generation failed: {e}")
+            return None
 
     def _get_token_probabilities(
         self, input_text: str, summary: str
