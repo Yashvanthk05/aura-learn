@@ -124,10 +124,16 @@ async def explain_abstractive(request: ExplainAbstractiveRequest):
             combined_text,
             max_length=request.max_length,
             min_length=request.min_length,
+            generate_shap=request.generate_shap,
         )
 
         if "error" in result:
             raise HTTPException(status_code=400, detail=result["error"])
+
+        from app.models.schemas import ShapExplanation
+        shap_explanation = None
+        if result.get("shap_explanation"):
+            shap_explanation = ShapExplanation(**result["shap_explanation"])
 
         return ExplainAbstractiveResponse(
             original_text_sentences=result["original_text_sentences"],
@@ -145,6 +151,7 @@ async def explain_abstractive(request: ExplainAbstractiveRequest):
             token_confidence=[
                 TokenConfidence(**t) for t in result["token_confidence"]
             ],
+            shap_explanation=shap_explanation,
             explanation_methods=result["explanation_methods"],
             xai_type=result["xai_type"],
         )
