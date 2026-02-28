@@ -191,7 +191,8 @@ class ExtractiveSummarizer:
             if available_scores[best_idx] < min_confidence and len(selected) > 0:
                 break
             
-            selected.append(best_idx)
+            selected.append(int(best_idx))
+            available_scores[best_idx] = -float('inf')
     
             for idx in range(len(available_scores)):
                 if idx not in selected:
