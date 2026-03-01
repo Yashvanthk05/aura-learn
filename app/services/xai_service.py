@@ -17,7 +17,8 @@ class ExplainableExtractiveService:
     def explain_extractive(
         self,
         text: str,
-        num_sentences: int = 3
+        num_sentences: int = 3,
+        generate_lrp: bool = False,
     ) -> Dict:
         """
         Full explanation pipeline for extractive summarization.
@@ -42,6 +43,15 @@ class ExplainableExtractiveService:
                 }
                 for i, s in enumerate(sentences)
             ]
+
+            lrp_explanation = None
+            if generate_lrp:
+                lrp_explanation = self._generate_lrp_explanation(sentences, all_indices)
+
+            explanation_methods = ["all_sentences_selected"]
+            if lrp_explanation:
+                explanation_methods.append("layer_wise_relevance_propagation (Gradient x Input)")
+
             return {
                 "summary": " ".join(sentences),
                 "num_sentences_input": len(sentences),
@@ -51,7 +61,8 @@ class ExplainableExtractiveService:
                 "average_score_all": 1.0,
                 "score_distribution": {"min": 1.0, "max": 1.0, "std": 0.0},
                 "sentences": sentence_explanations,
-                "explanation_methods": ["all_sentences_selected"],
+                "lrp_explanation": lrp_explanation,
+                "explanation_methods": explanation_methods,
                 "xai_type": "post-hoc + deep_explanation",
             }
 
@@ -97,6 +108,19 @@ class ExplainableExtractiveService:
         avg_selected_score = float(np.mean([base_scores[i] for i in top_indices]))
         avg_all_score = float(np.mean(base_scores))
 
+        # 5. Generate LRP explanation if requested
+        lrp_explanation = None
+        if generate_lrp:
+            lrp_explanation = self._generate_lrp_explanation(sentences, top_indices)
+
+        explanation_methods = [
+            "importance_scoring",
+            "attention_weights",
+            "sensitivity_analysis",
+        ]
+        if lrp_explanation:
+            explanation_methods.append("layer_wise_relevance_propagation (Gradient x Input)")
+
         return {
             "summary": summary,
             "num_sentences_input": len(sentences),
@@ -110,11 +134,8 @@ class ExplainableExtractiveService:
                 "std": round(float(np.std(base_scores)), 4),
             },
             "sentences": sentence_explanations,
-            "explanation_methods": [
-                "importance_scoring",
-                "attention_weights",
-                "sensitivity_analysis",
-            ],
+            "lrp_explanation": lrp_explanation,
+            "explanation_methods": explanation_methods,
             "xai_type": "post-hoc + deep_explanation",
         }
 
@@ -132,6 +153,77 @@ class ExplainableExtractiveService:
 
             scores = self.model(embeddings_t, lengths, mask)
             return scores.squeeze(0).cpu().numpy()
+
+    def _generate_lrp_explanation(
+        self, sentences: List[str], selected_indices: List[int]
+    ) -> Optional[Dict]:
+        """
+        Calculates feature attribution mathematically aligned to Layer-wise Relevance 
+        Propagation (Gradient * Input) using the captum library to show how parts of 
+        the document contributed to the summarizer's selection of a specific sentence.
+        """
+        try:
+            import captum.attr as attr
+            
+            # Get embeddings
+            embeddings = self.encoder.encode(sentences, convert_to_numpy=True)
+            embeddings_t = (
+                torch.tensor(embeddings, dtype=torch.float32)
+                .unsqueeze(0)
+                .to(self.device)
+            )
+            embeddings_t.requires_grad_(True)
+            
+            lengths = torch.tensor([len(sentences)])
+            mask = torch.ones(1, len(sentences), dtype=torch.bool).to(self.device)
+
+            # Wrapper for captum
+            def forward_func(emb):
+                return self.model(emb, lengths, mask)
+
+            # Temporarily set to train mode for CuDNN RNN backward compatibility, 
+            # but we won't actually step the optimizer.
+            was_training = self.model.training
+            self.model.train()
+
+            # Array to hold attributions. Shape: [num_selected, num_input]
+            attributions_matrix = []
+            
+            input_x_grad = attr.InputXGradient(forward_func)
+            
+            for idx in selected_indices:
+                # Captum natively handles the backward pass based on the target class (idx)
+                # It expects a standard python int for target
+                self.model.zero_grad()
+                grad_x_input = input_x_grad.attribute(embeddings_t, target=int(idx))
+
+                # Sum across the embedding dimension to get relevance per sentence
+                sentence_relevance = grad_x_input.sum(dim=-1).squeeze(0).cpu().detach().numpy()
+                
+                # Optional: normalize to make the values visually proportional 
+                # to their absolute percentage influence
+                total_abs_relevance = np.sum(np.abs(sentence_relevance))
+                if total_abs_relevance > 0:
+                    sentence_relevance = sentence_relevance / total_abs_relevance
+                    
+                attributions_matrix.append([round(float(val), 4) for val in sentence_relevance])
+
+            # Restore original mode
+            if not was_training:
+                self.model.eval()
+
+            return {
+                "selected_sentences": selected_indices,
+                "input_sentences": len(sentences),
+                "feature_attributions": attributions_matrix
+            }
+            
+        except ImportError:
+            print("WARN: Captum is not installed. LRP explanation skipped.")
+            return None
+        except Exception as e:
+            print(f"WARN: LRP extraction failed: {e}")
+            return None
 
     def _get_attention_weights(self, sentences: List[str]) -> Optional[np.ndarray]:
         """Extract attention weights from the MultiheadAttention layer."""

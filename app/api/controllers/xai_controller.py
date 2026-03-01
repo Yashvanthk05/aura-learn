@@ -40,10 +40,19 @@ async def explain_extractive(request: ExplainExtractiveRequest):
 
     try:
         xai = ExplainableExtractiveService(svc.extractive_summarizer)
-        result = xai.explain_extractive(combined_text, request.num_sentences)
+        result = xai.explain_extractive(
+            combined_text, 
+            request.num_sentences,
+            generate_lrp=request.generate_lrp
+        )
 
         if "error" in result:
             raise HTTPException(status_code=400, detail=result["error"])
+
+        from app.models.schemas import LRPExplanation
+        lrp_explanation = None
+        if result.get("lrp_explanation"):
+            lrp_explanation = LRPExplanation(**result["lrp_explanation"])
 
         return ExplainExtractiveResponse(
             summary=result["summary"],
@@ -54,6 +63,7 @@ async def explain_extractive(request: ExplainExtractiveRequest):
             average_score_all=result["average_score_all"],
             score_distribution=result["score_distribution"],
             sentences=[SentenceExplanation(**s) for s in result["sentences"]],
+            lrp_explanation=lrp_explanation,
             explanation_methods=result["explanation_methods"],
             xai_type=result["xai_type"],
         )

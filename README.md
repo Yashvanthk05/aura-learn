@@ -11,3 +11,6 @@ Professional document intelligence API for PDF processing, summarization, and au
 - **Abstractive summarization** using a fine‑tuned T5 model
 - **Audiobook generation** via high-quality TTS
 - **End-to-end pipeline** from document upload to audio output
+
+### Architecture
+<img src="./assets/auralearn_architecture.png" >

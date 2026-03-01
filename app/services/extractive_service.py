@@ -96,8 +96,8 @@ class ExtractiveSummarizer:
         self.model.eval()
         
         print(f"Extractive model loaded on {self.device}")
-        if 'rouge_scores' in checkpoint:
-            print(f"Model ROUGE-1 score: {checkpoint['rouge_scores']['rouge1']:.4f}")
+        # if 'rouge_scores' in checkpoint:
+        #     print(f"Model ROUGE-1 score: {checkpoint['rouge_scores']['rouge1']:.4f}")
     
     def summarize(
         self,
