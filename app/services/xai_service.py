@@ -467,7 +467,7 @@ class ExplainableAbstractiveService:
             explanation_methods.append("shap_text_attribution")
 
         return {
-            "original_text_sentences": len(sentences),
+            "original_text_sentences": sentences,
             "summary": full_summary,
             "summary_word_count": len(full_summary.split()),
             "compression_ratio": round(

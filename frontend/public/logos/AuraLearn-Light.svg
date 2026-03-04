@@ -1,0 +1,36 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="1080" height="1080">
+	<defs>
+		<linearGradient id="g1" x2="1" gradientUnits="userSpaceOnUse" gradientTransform="matrix(-305.282,795.286,-440.802,-169.208,585.645,162.082)">
+			<stop offset="0" stop-color="#4ec589"/>
+			<stop offset="1" stop-color="#d2ff8c"/>
+		</linearGradient>
+		<image width="800" height="800" id="img1" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48IS0tIFVwbG9hZGVkIHRvOiBTVkcgUmVwbywgd3d3LnN2Z3JlcG8uY29tLCBHZW5lcmF0b3I6IFNWRyBSZXBvIE1peGVyIFRvb2xzIC0tPgo8c3ZnIGZpbGw9IiMwMDAwMDAiIHdpZHRoPSI4MDBweCIgaGVpZ2h0PSI4MDBweCIgdmlld0JveD0iMCAwIDI1NiAyNTYiIGlkPSJGbGF0IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDxwYXRoIGQ9Ik0yNDAuNTg5ODQsMTI4YTE1Ljg0Nzk0LDE1Ljg0Nzk0LDAsMCwxLTEwLjUzMTI1LDE1LjAzNzExbC02My44MTU0MywyMy4yMDYtMjMuMjA2LDYzLjgxNTQzYTE2LjAwMSwxNi4wMDEsMCwwLDEtMzAuMDc0MjIsMEw4OS43NTY4NCwxNjYuMjQzMTZsLTYzLjgxNTQzLTIzLjIwNmExNi4wMDEsMTYuMDAxLDAsMCwxLDAtMzAuMDc0MjJMODkuNzU2ODQsODkuNzU2ODRsMjMuMjA2MDUtNjMuODE1NDNhMTYuMDAxLDE2LjAwMSwwLDAsMSwzMC4wNzQyMiwwbDIzLjIwNiw2My44MTU0Myw2My44MTU0MywyMy4yMDYwNUExNS44NDc5NCwxNS44NDc5NCwwLDAsMSwyNDAuNTg5ODQsMTI4WiIvPgo8L3N2Zz4="/>
+	</defs>
+	<style>
+		tspan { white-space:pre } 
+		.s0 { fill: url(#g1) } 
+		.t1 { font-size: 155px;fill: #000000;font-weight: 400;font-family: "Inter-Regular", "Inter" } 
+		.t2 { font-size: 148px;fill: #000000;font-weight: 400;font-family: "Inter-Regular", "Inter" } 
+	</style>
+	<g id="Folder 1">
+		<path id="Color Fill 1" class="s0" d="m158.21 884.11c0 0 237.21 157.34 454.08-15.82 216.88-173.16-3.39-698.41-3.39-698.41l-450.69 673.56z"/>
+		<text id="Λ" style="transform: matrix(7.126,0,-2.559,7.511,-21.312,944.134)">
+			<tspan x="0" y="0" class="t1">Λ</tspan><tspan  y="0" class="t1">
+</tspan>
+		</text>
+		<text id="L" style="transform: matrix(7.126,0,0,7.88,513.148,945.102)">
+			<tspan x="0" y="0" class="t2">L
+</tspan>
+		</text>
+		<filter id="f0">
+			<feFlood flood-color="#000000" flood-opacity="1" />
+			<feBlend mode="normal" in2="SourceGraphic"/>
+			<feComposite in2="SourceAlpha" operator="in" />
+		</filter>
+		<g id="Folder 2" filter="url(#f0)">
+			<use id="star-four-fill-svgrepo-com" href="#img1" transform="matrix(.386,0,0,.386,740.298,223.672)"/>
+			<use id="star-four-fill-svgrepo-com copy" href="#img1" transform="matrix(.198,0,0,.198,825.028,566.172)"/>
+			<use id="star-four-fill-svgrepo-com copy 2" href="#img1" transform="matrix(.198,0,0,.198,925.271,456.381)"/>
+		</g>
+	</g>
+</svg>
