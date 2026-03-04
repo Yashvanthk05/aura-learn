@@ -53,7 +53,7 @@ class ExtractiveModel(torch.nn.Module):
         
         batch_size, seq_len, _ = x.shape
         
-        pos = torch.arange(seq_len, device=x.device).unsqueeze(0).repeat(batch_size, 1)
+        pos = torch.arange(seq_len, device=x.device).clamp(max=self.pos_emb.num_embeddings - 1).unsqueeze(0).repeat(batch_size, 1)
         x = x + self.pos_emb(pos)
         
         packed_x = pack_padded_sequence(x, lengths.cpu(), batch_first=True, enforce_sorted=False)
