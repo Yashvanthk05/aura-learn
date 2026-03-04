@@ -6,6 +6,8 @@ import * as api from "../api/client";
 export default function ChatPanel() {
   const { state, dispatch } = useApp();
   const [input, setInput] = useState("");
+  const [modelType, setModelType] = useState("extractive");
+  const [includeHistory, setIncludeHistory] = useState(true);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -37,7 +39,7 @@ export default function ChatPanel() {
     dispatch({ type: "SET_CHAT_LOADING", payload: true });
 
     try {
-      const res = await api.chatQuery(state.sessionId, q);
+      const res = await api.chatQuery(state.sessionId, q, { modelType, includeHistory });
       dispatch({
         type: "ADD_MESSAGE",
         payload: {
@@ -51,7 +53,7 @@ export default function ChatPanel() {
     } catch (err) {
       dispatch({ type: "SET_CHAT_ERROR", payload: err.message });
     }
-  }, [input, state.sessionId, state.isChatLoading, dispatch]);
+  }, [input, state.sessionId, state.isChatLoading, modelType, includeHistory, dispatch]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -113,6 +115,24 @@ export default function ChatPanel() {
             {state.activeDocument.filename}
           </span>
         )}
+        <div className="flex-1" />
+        <div className="flex items-center gap-3 text-xs" style={{ color: "var(--fg-secondary)" }}>
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <input type="checkbox" checked={includeHistory} onChange={(e) => setIncludeHistory(e.target.checked)} className="rounded border-gray-600 bg-transparent text-accent focus:ring-accent" />
+            History context
+          </label>
+          <div className="flex gap-0.5 p-0.5 rounded-md" style={{ background: "var(--bg-elevated)" }}>
+            {["extractive", "abstractive"].map((m) => (
+              <button key={m} onClick={() => setModelType(m)}
+                className="px-2 py-1 rounded transition-colors capitalize"
+                style={{
+                  fontSize: 10,
+                  background: modelType === m ? "var(--accent-muted)" : "transparent",
+                  color: modelType === m ? "var(--accent)" : "var(--fg-tertiary)",
+                }}>{m}</button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div

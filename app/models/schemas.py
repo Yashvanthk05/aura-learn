@@ -132,6 +132,7 @@ class ChatQueryRequest(BaseModel):
     top_k: int = 5
     include_history: bool = True
     max_context_chunks: int = 5
+    model_type: Optional[str] = "extractive"
 
 
 class ChatQueryResponse(BaseModel):
@@ -179,10 +180,17 @@ class SentenceExplanation(BaseModel):
     attention_to_others: Optional[List[float]] = None
 
 
+class LRPExplanation(BaseModel):
+    selected_sentences: List[int]
+    input_sentences: int
+    feature_attributions: List[List[float]]
+
+
 class ExplainExtractiveRequest(BaseModel):
     document_id: str
     chunk_ids: Optional[List[str]] = None
     num_sentences: int = 3
+    generate_lrp: bool = False
 
 
 class ExplainExtractiveResponse(BaseModel):
@@ -194,6 +202,7 @@ class ExplainExtractiveResponse(BaseModel):
     average_score_all: float
     score_distribution: dict
     sentences: List[SentenceExplanation]
+    lrp_explanation: Optional[LRPExplanation] = None
     explanation_methods: List[str]
     xai_type: str
 

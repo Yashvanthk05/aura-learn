@@ -313,21 +313,23 @@ function XaiFeature() {
   const [numSentences, setNumSentences] = useState(3);
   const [maxLength, setMaxLength] = useState(150);
   const [minLength, setMinLength] = useState(50);
+  const [generateLrp, setGenerateLrp] = useState(false);
+  const [generateShap, setGenerateShap] = useState(false);
 
   const run = useCallback(async () => {
     dispatch({ type: "SET_FEATURE_LOADING", payload: true });
     try {
       let res;
       if (mode === "extractive") {
-        res = await api.explainExtractive(state.activeDocumentId, { numSentences });
+        res = await api.explainExtractive(state.activeDocumentId, { numSentences, generateLrp });
       } else {
-        res = await api.explainAbstractive(state.activeDocumentId, { maxLength, minLength });
+        res = await api.explainAbstractive(state.activeDocumentId, { maxLength, minLength, generateShap });
       }
       dispatch({ type: "SET_FEATURE_RESULT", payload: res });
     } catch (err) {
       dispatch({ type: "SET_FEATURE_ERROR", payload: err.message });
     }
-  }, [state.activeDocumentId, mode, numSentences, maxLength, minLength, dispatch]);
+  }, [state.activeDocumentId, mode, numSentences, maxLength, minLength, generateLrp, generateShap, dispatch]);
 
   const r = state.featureResult;
 
@@ -345,17 +347,23 @@ function XaiFeature() {
       </div>
 
       {mode === "extractive" && (
-        <div>
-          <label className="text-xs mb-1 block" style={{ color: "var(--fg-secondary)" }}>
-            Sentences: {numSentences}
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs mb-1 block" style={{ color: "var(--fg-secondary)" }}>
+              Sentences: {numSentences}
+            </label>
+            <input type="range" min={1} max={10} value={numSentences}
+              onChange={(e) => setNumSentences(Number(e.target.value))} className="w-full slider-styled" />
+          </div>
+          <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "var(--fg-secondary)" }}>
+            <input type="checkbox" checked={generateLrp} onChange={(e) => setGenerateLrp(e.target.checked)} className="rounded border-gray-600 bg-transparent text-accent focus:ring-accent" />
+            Enable LRP Explanation (Advanced)
           </label>
-          <input type="range" min={1} max={10} value={numSentences}
-            onChange={(e) => setNumSentences(Number(e.target.value))} className="w-full slider-styled" />
         </div>
       )}
 
       {mode === "abstractive" && (
-        <>
+        <div className="space-y-3">
           <div>
             <label className="text-xs mb-1 block" style={{ color: "var(--fg-secondary)" }}>
               Max length: {maxLength}
@@ -378,7 +386,11 @@ function XaiFeature() {
                 if (maxLength <= v) setMaxLength(v + 20);
               }} className="w-full slider-styled" />
           </div>
-        </>
+          <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "var(--fg-secondary)" }}>
+            <input type="checkbox" checked={generateShap} onChange={(e) => setGenerateShap(e.target.checked)} className="rounded border-gray-600 bg-transparent text-accent focus:ring-accent" />
+            Enable SHAP Explanation (Advanced)
+          </label>
+        </div>
       )}
 
       <button onClick={run} disabled={state.isFeatureLoading}

@@ -51,6 +51,7 @@ export const chatQuery = (sessionId, query, opts = {}) =>
       top_k: opts.topK ?? 5,
       include_history: opts.includeHistory ?? true,
       max_context_chunks: opts.maxContextChunks ?? 5,
+      model_type: opts.modelType ?? "extractive",
     }),
   });
 
@@ -110,6 +111,7 @@ export const explainExtractive = (documentId, opts = {}) =>
       document_id: documentId,
       num_sentences: opts.numSentences ?? 3,
       chunk_ids: opts.chunkIds,
+      generate_lrp: opts.generateLrp ?? false,
     }),
   });
 
@@ -121,6 +123,7 @@ export const explainAbstractive = (documentId, opts = {}) =>
       max_length: opts.maxLength ?? 150,
       min_length: opts.minLength ?? 50,
       chunk_ids: opts.chunkIds,
+      generate_shap: opts.generateShap ?? false,
     }),
   });
 
