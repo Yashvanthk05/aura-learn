@@ -387,14 +387,14 @@ function XaiFeature() {
         {state.isFeatureLoading ? "Analyzing…" : "Explain"}
       </button>
 
-      {r?.xai_type === "extractive" && (
+      {r?.xai_type?.includes("post-hoc + deep_explanation") && (
         <>
           <div className="grid grid-cols-2 gap-2">
             {[
               ["Input sentences", r.num_sentences_input],
               ["Selected", r.num_sentences_selected],
-              ["Avg selected", `${(r.average_score_selected * 100).toFixed(1)}%`],
-              ["Avg all", `${(r.average_score_all * 100).toFixed(1)}%`],
+              ["Avg selected", `${((r.average_score_selected || 0) * 100).toFixed(1)}%`],
+              ["Avg all", `${((r.average_score_all || 0) * 100).toFixed(1)}%`],
             ].map(([label, val]) => (
               <div key={label} className="rounded-md p-2" style={{ background: "var(--bg-elevated)", border: "1px solid var(--border)" }}>
                 <p className="text-xs" style={{ color: "var(--fg-muted)", fontSize: 9 }}>{label}</p>
@@ -454,12 +454,12 @@ function XaiFeature() {
                   <div className="flex items-center gap-2">
                     <div className="flex-1 h-1.5 rounded-full" style={{ background: "var(--bg-overlay)" }}>
                       <div className="h-full rounded-full" style={{
-                        width: `${Math.max(s.importance_score * 100, 2)}%`,
+                        width: `${Math.max((s.importance_score || 0) * 100, 2)}%`,
                         background: s.is_selected ? "var(--accent)" : "var(--fg-muted)",
                       }} />
                     </div>
                     <span className="text-xs shrink-0" style={{ color: s.is_selected ? "var(--accent)" : "var(--fg-tertiary)", fontSize: 9 }}>
-                      {(s.importance_score * 100).toFixed(1)}%
+                      {((s.importance_score || 0) * 100).toFixed(1)}%
                     </span>
                   </div>
                   <div className="flex gap-3 flex-wrap" style={{ fontSize: 9, color: "var(--fg-muted)" }}>
@@ -496,7 +496,7 @@ function XaiFeature() {
         </>
       )}
 
-      {r?.xai_type === "abstractive" && (
+      {r?.xai_type?.includes("post-hoc_sensitivity") && (
         <>
           {r.summary && (
             <div className="rounded-lg p-3 text-sm leading-relaxed"
@@ -510,7 +510,7 @@ function XaiFeature() {
               {r.summary_word_count} tokens
             </span>
             <span className="px-1.5 py-0.5 rounded" style={{ background: "var(--bg-elevated)" }}>
-              {(r.compression_ratio * 100).toFixed(1)}% compression
+              {((r.compression_ratio || 0) * 100).toFixed(1)}% compression
             </span>
           </div>
 
@@ -542,12 +542,12 @@ function XaiFeature() {
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-1.5 rounded-full" style={{ background: "var(--bg-overlay)" }}>
                           <div className="h-full rounded-full" style={{
-                            width: `${Math.max((sc.normalized_contribution || sc.contribution_score) * 100, 2)}%`,
+                            width: `${Math.max(((sc.normalized_contribution || sc.contribution_score) || 0) * 100, 2)}%`,
                             background: isMost ? "var(--accent)" : "var(--fg-muted)",
                           }} />
                         </div>
                         <span className="text-xs shrink-0" style={{ color: isMost ? "var(--accent)" : "var(--fg-tertiary)", fontSize: 9 }}>
-                          {((sc.normalized_contribution || sc.contribution_score) * 100).toFixed(1)}%
+                          {(((sc.normalized_contribution || sc.contribution_score) || 0) * 100).toFixed(1)}%
                         </span>
                       </div>
                     </div>
@@ -563,7 +563,7 @@ function XaiFeature() {
               <div className="flex flex-wrap gap-0.5">
                 {r.token_confidence.map((t, i) => (
                   <span key={i} className="text-xs px-1 py-0.5 rounded cursor-default"
-                    title={`${(t.confidence * 100).toFixed(1)}% confidence`}
+                    title={`${((t.confidence || 0) * 100).toFixed(1)}% confidence`}
                     style={{
                       fontSize: 10,
                       background: `rgba(78, 197, 137, ${Math.min(t.confidence, 1) * 0.3})`,
