@@ -27,7 +27,7 @@ async def generate_audiobook(request: AudiobookRequest):
             raise HTTPException(status_code=500, detail="Audiobook generation failed: output file missing")
 
         return AudiobookResponse(
-            audio_url=f"/audio/{audio_filename}",
+            audio_url=f"/api/v1/audio/{audio_filename}",
             filename=audio_filename,
             text_length=len(request.text),
             language=request.language,

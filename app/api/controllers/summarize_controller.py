@@ -92,7 +92,7 @@ async def summarize_and_generate_audio(request: SummarizeAndAudioRequest):
             document_id=request.document_id,
             summarization_type=request.summarization_type,
             summary=summary,
-            audio_url=f"/audio/{audio_filename}",
+            audio_url=f"/api/v1/audio/{audio_filename}",
             audio_filename=audio_filename,
             num_chunks_processed=len(chunks)
         )
