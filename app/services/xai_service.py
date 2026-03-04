@@ -238,7 +238,7 @@ class ExplainableExtractiveService:
 
                 batch_size, seq_len, _ = embeddings_t.shape
                 pos = (
-                    torch.arange(seq_len, device=self.device)
+                    torch.arange(seq_len, device=self.device).clamp(max=self.model.pos_emb.num_embeddings - 1)
                     .unsqueeze(0)
                     .repeat(batch_size, 1)
                 )
@@ -489,11 +489,12 @@ class ExplainableAbstractiveService:
             from packaging import version
             
             # Create a pipeline from the existing model and tokenizer
+            device_id = self.device.index if self.device.index is not None else 0
             pipe = pipeline(
                 "summarization", 
                 model=self.model, 
                 tokenizer=self.tokenizer, 
-                device=self.device.index if self.device.type == "cuda" else -1
+                device=device_id if self.device.type == "cuda" else -1
             )
             
             explainer = shap.Explainer(pipe)
