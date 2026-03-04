@@ -33,4 +33,5 @@ dependencies = [
     "openai-whisper>=20250625",
     "ffmpeg-python>=0.2.0",
     "shap",
+    "captum",
 ]
