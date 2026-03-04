@@ -33,8 +33,8 @@ class ExtractiveModel(torch.nn.Module):
             batch_first=True
         )
         
-        self.layer_norm1 = torch.nn.LayerNorm(hidden_dim * 2)
-        self.layer_norm2 = torch.nn.LayerNorm(hidden_dim * 2)
+        self.norm1 = torch.nn.LayerNorm(hidden_dim * 2)
+        self.norm2 = torch.nn.LayerNorm(hidden_dim * 2)
         
         self.classifier = torch.nn.Sequential(
             torch.nn.Linear(hidden_dim * 2, hidden_dim),
@@ -60,7 +60,7 @@ class ExtractiveModel(torch.nn.Module):
         packed_out, _ = self.lstm(packed_x)
         lstm_out, _ = pad_packed_sequence(packed_out, batch_first=True)
         
-        lstm_out = self.layer_norm1(lstm_out)
+        lstm_out = self.norm1(lstm_out)
         
         attn_out, _ = self.attention(
             lstm_out, lstm_out, lstm_out,
@@ -68,7 +68,7 @@ class ExtractiveModel(torch.nn.Module):
             need_weights=False
         )
         
-        combined = self.layer_norm2(lstm_out + attn_out)
+        combined = self.norm2(lstm_out + attn_out)
         scores = self.classifier(combined).squeeze(-1)
         
         return scores
