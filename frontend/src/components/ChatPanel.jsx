@@ -118,7 +118,7 @@ export default function ChatPanel() {
         <div className="flex-1" />
         <div className="flex items-center gap-3 text-xs" style={{ color: "var(--fg-secondary)" }}>
           <label className="flex items-center gap-1.5 cursor-pointer">
-            <input type="checkbox" checked={includeHistory} onChange={(e) => setIncludeHistory(e.target.checked)} className="rounded border-gray-600 bg-transparent text-accent focus:ring-accent" />
+            <input type="checkbox" checked={includeHistory} onChange={(e) => setIncludeHistory(e.target.checked)} className="appearance-none w-4 h-4 m-0 rounded-full border border-[var(--accent)] checked:bg-[var(--accent)] checked:border-[var(--accent)] cursor-pointer transition-colors bg-center bg-no-repeat checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22white%22%20stroke-width=%223%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpolyline%20points=%2220%206%209%2017%204%2012%22/%3E%3C/svg%3E')] checked:bg-[length:65%_65%]" />
             History context
           </label>
           <div className="flex gap-0.5 p-0.5 rounded-md" style={{ background: "var(--bg-elevated)" }}>

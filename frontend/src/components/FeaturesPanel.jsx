@@ -356,7 +356,7 @@ function XaiFeature() {
               onChange={(e) => setNumSentences(Number(e.target.value))} className="w-full slider-styled" />
           </div>
           <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "var(--fg-secondary)" }}>
-            <input type="checkbox" checked={generateLrp} onChange={(e) => setGenerateLrp(e.target.checked)} className="rounded border-gray-600 bg-transparent text-accent focus:ring-accent" />
+            <input type="checkbox" checked={generateLrp} onChange={(e) => setGenerateLrp(e.target.checked)} className="appearance-none w-4 h-4 m-0 rounded-full border border-[var(--accent)] checked:bg-[var(--accent)] checked:border-[var(--accent)] cursor-pointer transition-colors bg-center bg-no-repeat checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22white%22%20stroke-width=%223%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpolyline%20points=%2220%206%209%2017%204%2012%22/%3E%3C/svg%3E')] checked:bg-[length:65%_65%]" />
             Enable LRP Explanation (Advanced)
           </label>
         </div>
@@ -387,7 +387,7 @@ function XaiFeature() {
               }} className="w-full slider-styled" />
           </div>
           <label className="flex items-center gap-2 text-xs cursor-pointer" style={{ color: "var(--fg-secondary)" }}>
-            <input type="checkbox" checked={generateShap} onChange={(e) => setGenerateShap(e.target.checked)} className="rounded border-gray-600 bg-transparent text-accent focus:ring-accent" />
+            <input type="checkbox" checked={generateShap} onChange={(e) => setGenerateShap(e.target.checked)} className="appearance-none w-4 h-4 m-0 rounded-full border border-[var(--accent)] checked:bg-[var(--accent)] checked:border-[var(--accent)] cursor-pointer transition-colors bg-center bg-no-repeat checked:bg-[url('data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2024%2024%22%20fill=%22none%22%20stroke=%22white%22%20stroke-width=%223%22%20stroke-linecap=%22round%22%20stroke-linejoin=%22round%22%3E%3Cpolyline%20points=%2220%206%209%2017%204%2012%22/%3E%3C/svg%3E')] checked:bg-[length:65%_65%]" />
             Enable SHAP Explanation (Advanced)
           </label>
         </div>
@@ -444,8 +444,8 @@ function XaiFeature() {
 
           {r.sentences && (
             <div className="space-y-2">
-              <p className="text-xs" style={{ color: "var(--fg-muted)", fontSize: 10 }}>Sentence Analysis</p>
-              {r.sentences.map((s, i) => (
+              <p className="text-xs" style={{ color: "var(--fg-muted)", fontSize: 10 }}>Sentence Analysis (Top 50 shown)</p>
+              {r.sentences.slice(0, 50).map((s, i) => (
                 <div key={i} className="rounded-lg p-2.5 space-y-1.5"
                   style={{
                     background: "var(--bg-elevated)",
@@ -480,7 +480,10 @@ function XaiFeature() {
                   </div>
                   {s.attention_to_others && s.attention_to_others.length > 0 && (
                     <div className="flex gap-0.5 flex-wrap">
-                      {s.attention_to_others.map((a, j) => (
+                      {s.attention_to_others.map((a, j) => ({ a, j }))
+                        .filter(({ a }) => a > 0.05)
+                        .slice(0, 10)
+                        .map(({ a, j }) => (
                         <span key={j} className="px-1 py-0.5 rounded text-xs"
                           style={{
                             fontSize: 8,
@@ -528,9 +531,9 @@ function XaiFeature() {
 
           {r.sentence_contributions && r.sentence_contributions.length > 0 && (
             <div>
-              <p className="text-xs mb-2" style={{ color: "var(--fg-muted)", fontSize: 10 }}>Source Sentence Contributions</p>
+              <p className="text-xs mb-2" style={{ color: "var(--fg-muted)", fontSize: 10 }}>Source Sentence Contributions (Top 50 shown)</p>
               <div className="space-y-2">
-                {r.sentence_contributions.map((sc, i) => {
+                {r.sentence_contributions.slice(0, 50).map((sc, i) => {
                   const isMost = r.most_influential_sentence?.index === sc.index;
                   return (
                     <div key={i} className="rounded-lg p-2.5 space-y-1"
@@ -571,9 +574,9 @@ function XaiFeature() {
 
           {r.token_confidence && (
             <div>
-              <p className="text-xs mb-2" style={{ color: "var(--fg-muted)", fontSize: 10 }}>Token Confidence</p>
+              <p className="text-xs mb-2" style={{ color: "var(--fg-muted)", fontSize: 10 }}>Token Confidence (First 300 tokens)</p>
               <div className="flex flex-wrap gap-0.5">
-                {r.token_confidence.map((t, i) => (
+                {r.token_confidence.slice(0, 300).map((t, i) => (
                   <span key={i} className="text-xs px-1 py-0.5 rounded cursor-default"
                     title={`${((t.confidence || 0) * 100).toFixed(1)}% confidence`}
                     style={{
