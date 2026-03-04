@@ -1,6 +1,7 @@
 from typing import List, Dict, Optional, Tuple
 import re
 from app.services.extractive_service import ExtractiveSummarizer
+from app.services.abstractive_service import AbstractiveSummarizer
 from app.core.config import settings
 
 class RAGChatService:
@@ -8,7 +9,8 @@ class RAGChatService:
     def __init__(
         self,
         model_name: str = settings.EXTRACTIVE_MODEL_PATH,
-        device: Optional[str] = None
+        device: Optional[str] = None,
+        abstractive_summarizer: Optional[AbstractiveSummarizer] = None
     ):
         self.device = device if device else ('cuda' if __import__('torch').cuda.is_available() else 'cpu')
         self.model_name = model_name
@@ -24,6 +26,8 @@ class RAGChatService:
             print(f"WARN: Could not load {model_name}, using fallback simple generation: {e}")
             self.generator = None
         
+        self.abstractive_generator = abstractive_summarizer
+        
         print(f"Chat model loaded on {self.device}")
     
     def generate_response(
@@ -31,14 +35,17 @@ class RAGChatService:
         query: str,
         retrieved_chunks: List[Dict],
         conversation_history: Optional[str] = None,
-        max_context_chunks: int = 3
+        max_context_chunks: int = 3,
+        generation_type: str = "abstractive"
     ) -> Tuple[str, List[Dict]]:
         
         context_chunks = retrieved_chunks[:max_context_chunks]
         citations = self._build_citations(context_chunks)
         context = self._build_context(context_chunks)
         
-        if self.generator and context.strip():
+        if generation_type == "abstractive" and self.abstractive_generator and context.strip():
+            response = self._generate_with_abstractive_model(context)
+        elif generation_type == "extractive" and self.generator and context.strip():
             response = self._generate_with_model(context)
         else:
             response = self._generate_extractive_response(query, context_chunks)
@@ -74,6 +81,18 @@ class RAGChatService:
         
         return "\n\n".join(context_parts)
     
+    def _generate_with_abstractive_model(self, context: str) -> str:
+        try:
+            response = self.abstractive_generator.summarize(
+                context,
+                max_length=150,
+                min_length=40
+            )
+            return response if response.strip() else "I don't have enough information in the document to answer that question."
+        except Exception as e:
+            print(f"WARN: Abstractive generation failed: {e}, using extractive fallback")
+            return "I don't have enough information in the document to answer that question."
+
     def _generate_with_model(self, context: str) -> str:
 
         try:
@@ -146,11 +165,12 @@ class RAGChatService:
         return f"Discussed topics: {', '.join(unique_topics)}"
     
     def check_model_loaded(self) -> bool:
-        return self.generator is not None
+        return self.generator is not None or self.abstractive_generator is not None
     
     def get_model_info(self) -> Dict:
         return {
             'model_name': self.model_name,
             'device': self.device,
-            'loaded': self.generator is not None
+            'extractive_loaded': self.generator is not None,
+            'abstractive_loaded': self.abstractive_generator is not None
         }

@@ -70,7 +70,8 @@ async def chat_query(request: ChatQueryRequest):
             query=request.query,
             retrieved_chunks=retrieved_chunks,
             conversation_history=conversation_history,
-            max_context_chunks=request.max_context_chunks
+            max_context_chunks=request.max_context_chunks,
+            generation_type=request.model_type or "abstractive"
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Response generation failed: {str(e)}")
