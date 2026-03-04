@@ -227,6 +227,7 @@ class ExplainSearchResponse(BaseModel):
 
 
 class ExplainAbstractiveRequest(BaseModel):
+    generate_shap: bool = False
     document_id: str
     chunk_ids: Optional[List[str]] = None
     max_length: int = 150
@@ -247,7 +248,14 @@ class TokenConfidence(BaseModel):
     is_high_confidence: bool
 
 
+class ShapExplanation(BaseModel):
+    input_tokens: List[str]
+    output_tokens: List[str]
+    shap_values: List[List[float]]
+
+
 class ExplainAbstractiveResponse(BaseModel):
+    shap_explanation: Optional[ShapExplanation] = None
     original_text_sentences: List[str]
     summary: str
     summary_word_count: int
@@ -257,3 +265,6 @@ class ExplainAbstractiveResponse(BaseModel):
     token_confidence: List[TokenConfidence]
     explanation_methods: List[str]
     xai_type: str
+
+    
+    
