@@ -24,7 +24,7 @@ export function uploadDocument(file) {
         throw new Error(err.detail || "Upload failed");
       }
       return r.json();
-    }
+    },
   );
 }
 
@@ -73,19 +73,29 @@ export const summarize = (documentId, opts = {}) =>
     }),
   });
 
-export const summarizeAndAudio = (documentId, opts = {}) =>
-  request("/summarize-and-audio", {
+export const summarizeAndAudio = (documentId, opts = {}) => {
+  const form = new FormData();
+  form.append("document_id", documentId);
+  form.append("summarization_type", opts.type ?? "abstractive");
+  form.append("language", opts.language ?? "en");
+  form.append("max_length", opts.maxLength ?? 150);
+  form.append("min_length", opts.minLength ?? 40);
+
+  if (opts.numSentences) form.append("num_sentences", opts.numSentences);
+  if (opts.chunkIds) form.append("chunk_ids", JSON.stringify(opts.chunkIds));
+  if (opts.speakerAudio) form.append("speaker_audio", opts.speakerAudio);
+
+  return fetch(`${BASE}/summarize-and-audio`, {
     method: "POST",
-    body: JSON.stringify({
-      document_id: documentId,
-      summarization_type: opts.type ?? "abstractive",
-      num_sentences: opts.numSentences,
-      max_length: opts.maxLength ?? 150,
-      min_length: opts.minLength ?? 40,
-      chunk_ids: opts.chunkIds,
-      language: opts.language ?? "en",
-    }),
+    body: form,
+  }).then(async (r) => {
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({ detail: r.statusText }));
+      throw new Error(err.detail || "Request failed");
+    }
+    return r.json();
   });
+};
 
 export const generateAudiobook = (text, language = "en") =>
   request("/generate-audiobook", {
@@ -137,9 +147,13 @@ export const explainSearch = (documentId, query, opts = {}) =>
     }),
   });
 
-export function transcribeMedia(file) {
+export function transcribeMedia(file, opts = {}) {
   const form = new FormData();
   form.append("file", file);
+  form.append("summarization_type", opts.type ?? "extractive");
+  form.append("num_sentences", String(opts.numSentences ?? 3));
+  form.append("max_length", String(opts.maxLength ?? 150));
+  form.append("min_length", String(opts.minLength ?? 40));
   return fetch(`${BASE}/transcribe/`, { method: "POST", body: form }).then(
     async (r) => {
       if (!r.ok) {
@@ -147,6 +161,6 @@ export function transcribeMedia(file) {
         throw new Error(err.detail || "Transcription failed");
       }
       return r.json();
-    }
+    },
   );
 }

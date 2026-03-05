@@ -261,6 +261,8 @@ class ShapExplanation(BaseModel):
     input_tokens: List[str]
     output_tokens: List[str]
     shap_values: List[List[float]]
+    truncated: Optional[bool] = False
+    original_word_count: Optional[int] = None
 
 
 class ExplainAbstractiveResponse(BaseModel):
@@ -274,6 +276,14 @@ class ExplainAbstractiveResponse(BaseModel):
     token_confidence: List[TokenConfidence]
     explanation_methods: List[str]
     xai_type: str
+
+
+class TranscriptionResponse(BaseModel):
+    text: str
+    summary: str
+    summarization_type: str
+    language: str
+    metadata: Dict[str, Any]
 
     
     

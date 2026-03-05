@@ -6,7 +6,7 @@ from app.core.config import settings
 
 class TranscriptionService:
     def __init__(self):
-        # Check for ffmpeg
+
         import shutil
         if not shutil.which("ffmpeg"):
             print("Error: ffmpeg is not installed or not in PATH.")
@@ -21,15 +21,6 @@ class TranscriptionService:
             raise e
 
     def transcribe(self, file_path: Union[str, Path]) -> Dict:
-        """
-        Transcribes an audio or video file using OpenAI Whisper.
-        
-        Args:
-            file_path: Path to the audio/video file.
-            
-        Returns:
-            Dictionary containing the transcription text and segments.
-        """
         file_path = str(file_path)
         
         if not Path(file_path).exists():
