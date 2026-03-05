@@ -10,6 +10,7 @@ from app.services.tts_service import AudiobookGenerator
 from app.services.vector_store_service import HybridVectorStore
 from app.services.session_service import SessionManager
 from app.services.chat_service import RAGChatService
+from app.services.transcription_service import TranscriptionService
 
 document_manager: Optional[DocumentManager] = None
 extractive_summarizer: Optional[ExtractiveSummarizer] = None
@@ -18,11 +19,11 @@ audiobook_generator: Optional[AudiobookGenerator] = None
 vector_stores: Dict[str, HybridVectorStore] = {}
 session_manager: Optional[SessionManager] = None
 chat_service: Optional[RAGChatService] = None
-
+transcription_service: Optional[TranscriptionService] = None
 
 def init_services():
     global document_manager, extractive_summarizer, abstractive_summarizer
-    global audiobook_generator, session_manager, chat_service
+    global audiobook_generator, session_manager, chat_service, transcription_service
 
     document_manager = DocumentManager(settings.DATA_DIR)
 
@@ -42,7 +43,7 @@ def init_services():
     sessions_dir = settings.DATA_DIR / "sessions"
     session_manager = SessionManager(sessions_dir)
     chat_service = RAGChatService(abstractive_summarizer=abstractive_summarizer)
-
+    transcription_service = TranscriptionService()
 
 def get_or_create_vector_store(document_id: str) -> HybridVectorStore:
     if document_id not in vector_stores:
