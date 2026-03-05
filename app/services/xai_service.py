@@ -486,7 +486,9 @@ class ExplainableAbstractiveService:
         try:
             import shap
             from transformers import pipeline
-            from packaging import version
+            import threading
+            
+            print("INFO: Starting SHAP explanation (this may take 30-60 seconds)...")
             
             # Create a pipeline from the existing model and tokenizer
             device_id = self.device.index if self.device.index is not None else 0
@@ -494,27 +496,64 @@ class ExplainableAbstractiveService:
                 "summarization", 
                 model=self.model, 
                 tokenizer=self.tokenizer, 
-                device=device_id if self.device.type == "cuda" else -1
+                device=device_id if self.device.type == "cuda" else -1,
+                max_length=60,  # Shorter summaries for faster SHAP
+                min_length=20
             )
             
-            explainer = shap.Explainer(pipe)
-            # Use a smaller text if it's too long to prevent extremely slow computation
-            # SHAP is O(N^2) or worse for text generation
-            max_words_shap = 150
+            # SHAP is extremely slow - drastically reduce input size
+            # Even 50 words can take 30+ seconds
+            max_words_shap = 50
             words = text.split()
             if len(words) > max_words_shap:
                 short_text = " ".join(words[:max_words_shap])
+                print(f"INFO: Truncated text to {max_words_shap} words for SHAP (from {len(words)})")
             else:
                 short_text = text
-                
-            shap_values = explainer([short_text])
+                print(f"INFO: Using {len(words)} words for SHAP")
+            
+            # Use threading with timeout for cross-platform compatibility
+            result_container = {"shap_values": None, "error": None}
+            
+            def compute_shap():
+                try:
+                    # Use PartitionExplainer with limited samples for faster computation
+                    explainer = shap.Explainer(pipe, algorithm="partition", max_evals=100)
+                    result_container["shap_values"] = explainer([short_text])
+                except Exception as e:
+                    result_container["error"] = str(e)
+            
+            thread = threading.Thread(target=compute_shap)
+            thread.start()
+            thread.join(timeout=90)  # 90-second timeout
+            
+            if thread.is_alive():
+                print("WARN: SHAP computation timed out after 90 seconds")
+                return None
+            
+            if result_container["error"]:
+                print(f"WARN: SHAP computation failed: {result_container['error']}")
+                return None
+            
+            if result_container["shap_values"] is None:
+                print("WARN: SHAP computation returned no values")
+                return None
+            
+            shap_values = result_container["shap_values"]
+            print("INFO: SHAP explanation completed successfully")
             
             # Format outputs
             return {
                 "input_tokens": list(shap_values.data[0]),
                 "output_tokens": list(shap_values.output_names),
-                "shap_values": [list(val) for val in shap_values.values[0]]
+                "shap_values": [list(val) for val in shap_values.values[0]],
+                "truncated": len(words) > max_words_shap,
+                "original_word_count": len(words)
             }
+                
+        except ImportError as ie:
+            print(f"WARN: SHAP library not available: {ie}")
+            return None
         except Exception as e:
             print(f"WARN: SHAP explanation generation failed: {e}")
             return None
