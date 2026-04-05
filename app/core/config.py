@@ -14,8 +14,9 @@ class Settings(BaseSettings):
     - **Complete Pipeline**: End-to-end processing from PDF to audiobook
     """
     
-    GOOGLE_CLIENT_ID: str = "placeholder_google_client_id.apps.googleusercontent.com"
-    JWT_SECRET: str = "sup3r_s3cr3t_jwt_s1gnatur3_k3y_aurawhatever"
+    # Auth Configurations
+    GOOGLE_CLIENT_ID: str
+    JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
 
     
