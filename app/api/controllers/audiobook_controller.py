@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from app.core.security import get_current_user
+from app.models.schemas import User
 from fastapi.responses import FileResponse
 import uuid
 
@@ -10,7 +12,7 @@ router = APIRouter()
 
 
 @router.post("/generate-audiobook", response_model=AudiobookResponse)
-async def generate_audiobook(request: AudiobookRequest):
+async def generate_audiobook(request: AudiobookRequest, current_user: User = Depends(get_current_user)):
     if svc.audiobook_generator is None:
         raise HTTPException(status_code=503, detail="Audiobook generator not available")
 
@@ -40,7 +42,7 @@ async def generate_audiobook(request: AudiobookRequest):
 
 
 @router.get("/audio/{filename}")
-async def get_audio_file(filename: str):
+async def get_audio_file(filename: str, current_user: User = Depends(get_current_user)):
     audio_path = settings.OUTPUT_DIR / filename
 
     if audio_path.suffix == "":

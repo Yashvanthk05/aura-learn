@@ -1,9 +1,11 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from app.core.security import get_current_user
+from app.models.schemas import User, UploadPDFResponse
 import uuid
 import shutil
 import os
 
-from app.models.schemas import UploadPDFResponse
+
 from app.core.config import settings
 from app.utils.pdf_processor import SUPPORTED_EXTENSIONS
 from . import service_registry as svc
@@ -12,7 +14,7 @@ router = APIRouter()
 
 
 @router.post("/upload", response_model=UploadPDFResponse)
-async def upload_document(file: UploadFile = File(...)):
+async def upload_document(file: UploadFile = File(...), current_user: User = Depends(get_current_user)):
     file_ext = os.path.splitext(file.filename)[1].lower() if file.filename else ""
     if file_ext not in SUPPORTED_EXTENSIONS:
         raise HTTPException(
@@ -30,7 +32,7 @@ async def upload_document(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
 
     try:
-        result = svc.document_manager.process_document(str(upload_path), document_id)
+        result = svc.document_manager.process_document(str(upload_path), current_user.id, document_id)
         return UploadPDFResponse(
             document_id=document_id,
             filename=file.filename,

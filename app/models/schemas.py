@@ -285,5 +285,16 @@ class TranscriptionResponse(BaseModel):
     language: str
     metadata: Dict[str, Any]
 
-    
-    
+class User(BaseModel):
+    id: str
+    email: str
+    name: str
+    picture: Optional[str] = None
+
+class GoogleLoginRequest(BaseModel):
+    token: str
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: User

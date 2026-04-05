@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from app.core.security import get_current_user
+from app.models.schemas import User
 from typing import Optional
 from datetime import datetime
 
@@ -14,17 +16,17 @@ router = APIRouter()
 
 
 @router.post("/chat/session", response_model=CreateSessionResponse)
-async def create_chat_session(request: CreateSessionRequest):
-    document = svc.document_manager.get_document(request.document_id)
+async def create_chat_session(request: CreateSessionRequest, current_user: User = Depends(get_current_user)):
+    document = svc.document_manager.get_document(request.document_id, current_user.id)
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
 
-    svc.get_or_create_vector_store(request.document_id)
+    svc.get_or_create_vector_store(request.document_id, current_user.id)
 
     session_id = svc.session_manager.create_session(
-        request.document_id, request.metadata
+        current_user.id, request.document_id, request.metadata
     )
-    session = svc.session_manager.get_session(session_id)
+    session = svc.session_manager.get_session(session_id, current_user.id)
 
     return CreateSessionResponse(
         session_id=session_id,
@@ -35,15 +37,15 @@ async def create_chat_session(request: CreateSessionRequest):
 
 
 @router.post("/chat/query", response_model=ChatQueryResponse)
-async def chat_query(request: ChatQueryRequest):
-    session = svc.session_manager.get_session(request.session_id)
+async def chat_query(request: ChatQueryRequest, current_user: User = Depends(get_current_user)):
+    session = svc.session_manager.get_session(request.session_id, current_user.id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
     document_id = session['document_id']
 
     try:
-        vector_store = svc.get_or_create_vector_store(document_id)
+        vector_store = svc.get_or_create_vector_store(document_id, current_user.id)
     except HTTPException:
         raise
     except Exception as e:
@@ -62,7 +64,7 @@ async def chat_query(request: ChatQueryRequest):
     conversation_history = None
     if request.include_history:
         conversation_history = svc.session_manager.get_context_for_query(
-            request.session_id, max_history=5
+            request.session_id, current_user.id, max_history=5
         )
 
     try:
@@ -76,9 +78,9 @@ async def chat_query(request: ChatQueryRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Response generation failed: {str(e)}")
 
-    svc.session_manager.add_message(request.session_id, role='user', content=request.query)
+    svc.session_manager.add_message(request.session_id, current_user.id, role='user', content=request.query)
     svc.session_manager.add_message(
-        request.session_id, role='assistant', content=response_text, citations=citations
+        request.session_id, current_user.id, role='assistant', content=response_text, citations=citations
     )
 
     return ChatQueryResponse(
@@ -93,13 +95,13 @@ async def chat_query(request: ChatQueryRequest):
 
 
 @router.get("/chat/session/{session_id}/history", response_model=ConversationHistoryResponse)
-async def get_conversation_history(session_id: str, max_messages: Optional[int] = None):
-    session = svc.session_manager.get_session(session_id)
+async def get_conversation_history(session_id: str, max_messages: Optional[int] = None, current_user: User = Depends(get_current_user)):
+    session = svc.session_manager.get_session(session_id, current_user.id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
     messages = svc.session_manager.get_conversation_history(
-        session_id, max_messages=max_messages, include_citations=True
+        session_id, current_user.id, max_messages=max_messages, include_citations=True
     )
 
     return ConversationHistoryResponse(
@@ -111,8 +113,8 @@ async def get_conversation_history(session_id: str, max_messages: Optional[int] 
 
 
 @router.get("/chat/session/{session_id}", response_model=SessionInfoResponse)
-async def get_session_info(session_id: str):
-    session = svc.session_manager.get_session(session_id)
+async def get_session_info(session_id: str, current_user: User = Depends(get_current_user)):
+    session = svc.session_manager.get_session(session_id, current_user.id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
 
@@ -127,14 +129,14 @@ async def get_session_info(session_id: str):
 
 
 @router.delete("/chat/session/{session_id}")
-async def delete_chat_session(session_id: str):
-    success = svc.session_manager.delete_session(session_id)
+async def delete_chat_session(session_id: str, current_user: User = Depends(get_current_user)):
+    success = svc.session_manager.delete_session(session_id, current_user.id)
     if not success:
         raise HTTPException(status_code=404, detail="Session not found")
     return {"message": "Session deleted successfully"}
 
 
 @router.get("/chat/sessions")
-async def list_chat_sessions(document_id: Optional[str] = None):
-    sessions = svc.session_manager.list_sessions(document_id)
+async def list_chat_sessions(document_id: Optional[str] = None, current_user: User = Depends(get_current_user)):
+    sessions = svc.session_manager.list_sessions(current_user.id, document_id)
     return {"sessions": sessions}

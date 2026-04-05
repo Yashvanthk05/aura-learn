@@ -3,6 +3,7 @@ import { createContext, useContext, useReducer } from "react";
 const AppContext = createContext(null);
 
 const initialState = {
+  user: null,
   documents: [],
   activeDocumentId: null,
   activeDocument: null,
@@ -22,6 +23,21 @@ const initialState = {
 
 function reducer(state, action) {
   switch (action.type) {
+    case "SET_USER":
+      return { ...state, user: action.payload };
+
+    case "LOGOUT":
+      return {
+        ...state,
+        user: null,
+        documents: [],
+        activeDocumentId: null,
+        activeDocument: null,
+        sessionId: null,
+        messages: [],
+        featureResult: null,
+      };
+
     case "SET_DOCUMENTS":
       return { ...state, documents: action.payload };
 

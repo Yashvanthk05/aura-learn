@@ -14,6 +14,11 @@ class Settings(BaseSettings):
     - **Complete Pipeline**: End-to-end processing from PDF to audiobook
     """
     
+    GOOGLE_CLIENT_ID: str = "placeholder_google_client_id.apps.googleusercontent.com"
+    JWT_SECRET: str = "sup3r_s3cr3t_jwt_s1gnatur3_k3y_aurawhatever"
+    JWT_ALGORITHM: str = "HS256"
+
+    
     BASE_DIR: Path = Path(__file__).parent.parent.parent
     UPLOAD_DIR: Path = BASE_DIR / "uploads"
     OUTPUT_DIR: Path = BASE_DIR / "outputs"

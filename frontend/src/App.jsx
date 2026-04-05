@@ -5,6 +5,8 @@ import ChatPanel from "./components/ChatPanel";
 import FeaturesPanel from "./components/FeaturesPanel";
 import { useApp } from "./store/AppContext";
 import * as api from "./api/client";
+import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
 
 const SOURCE_WIDTH_KEY = "sources-panel-width";
 const FEATURE_WIDTH_KEY = "features-panel-width";
@@ -26,7 +28,7 @@ const getStoredWidth = (key, fallback) => {
 };
 
 export default function App() {
-  const { dispatch } = useApp();
+  const { state, dispatch } = useApp();
   const [theme, setTheme] = useState(
     () => localStorage.getItem("theme") || "dark",
   );
@@ -106,13 +108,49 @@ export default function App() {
   };
 
   useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        if (decoded.exp * 1000 > Date.now()) {
+          dispatch({
+            type: "SET_USER",
+            payload: { id: decoded.sub, name: decoded.name, email: decoded.email, picture: decoded.picture },
+          });
+        } else {
+          localStorage.removeItem("access_token");
+        }
+      } catch (e) {
+        localStorage.removeItem("access_token");
+      }
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!state.user) return;
+
     api
       .listDocuments()
       .then((res) =>
         dispatch({ type: "SET_DOCUMENTS", payload: res.documents || [] }),
       )
-      .catch(() => {});
-  }, [dispatch]);
+      .catch(() => { });
+  }, [dispatch, state.user]);
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const res = await api.googleLogin(credentialResponse.credential);
+      localStorage.setItem("access_token", res.access_token);
+      dispatch({ type: "SET_USER", payload: res.user });
+    } catch (e) {
+      console.error("Login Error:", e);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    dispatch({ type: "LOGOUT" });
+  };
 
   return (
     <div
@@ -156,21 +194,53 @@ export default function App() {
           >
             {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
           </button>
-          <button
-            className='flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-colors'
-            style={{
-              background: "var(--bg-elevated)",
-              color: "var(--fg-secondary)",
-              border: "1px solid var(--border)",
-            }}
-          >
-            <User size={14} />
-            Log in
-          </button>
+
+          {state.user ? (
+            <div className="flex items-center gap-3 ml-2">
+              <span className="text-sm font-medium text-[var(--fg-primary)]">
+                {state.user.name}
+              </span>
+              <button
+                onClick={handleLogout}
+                className='px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-red-500/10 hover:text-red-500 transition-colors'
+                style={{
+                  color: "var(--fg-secondary)",
+                  border: "1px solid var(--border)",
+                }}
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center ml-2">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => console.error("Google Login Failed")}
+                useOneTap
+                theme={theme === "dark" ? "filled_black" : "outline"}
+                shape="pill"
+              />
+            </div>
+          )}
         </div>
       </nav>
 
-      <div className='flex flex-1 min-h-0'>
+      <div className='flex flex-1 min-h-0 relative'>
+        {!state.user ? (
+          <div className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-[var(--bg-base)]">
+            <h2 className="text-2xl font-bold mb-4" style={{ color: "var(--fg-primary)" }}>Welcome to AuraLearn</h2>
+            <p className="mb-6 mb-8 text-center max-w-md" style={{ color: "var(--fg-secondary)" }}>
+              Please sign in with your Google account to manage your personalized documents
+            </p>
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => console.error("Google Login Failed")}
+              theme={theme === "dark" ? "filled_black" : "outline"}
+              shape="pill"
+            />
+          </div>
+        ) : null}
+
         <SourcesPanel
           width={sourcesWidth}
           onResizeStart={() => setResizingPanel("sources")}

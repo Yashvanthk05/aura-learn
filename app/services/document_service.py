@@ -16,8 +16,19 @@ class DocumentManager:
         
         self.doc_processor = DocumentProcessor()
         self.preprocessor = TextPreprocessor()
+        self.registry_file = self.data_dir / ".owner_registry.json"
+        
+    def _load_registry(self) -> Dict:
+        if self.registry_file.exists():
+            with open(self.registry_file, 'r') as f:
+                return json.load(f)
+        return {}
+        
+    def _save_registry(self, registry: Dict):
+        with open(self.registry_file, 'w') as f:
+            json.dump(registry, f, indent=2)
     
-    def process_document(self, pdf_path: str, document_id: Optional[str] = None) -> Dict:
+    def process_document(self, pdf_path: str, user_id: str, document_id: Optional[str] = None) -> Dict:
 
         if document_id is None:
             document_id = str(uuid.uuid4())
@@ -29,6 +40,10 @@ class DocumentManager:
         chunks_file = self.data_dir / f"{document_id}_chunks.json"
         with open(chunks_file, 'w', encoding='utf-8') as f:
             json.dump(processed_chunks, f, indent=2)
+            
+        registry = self._load_registry()
+        registry[document_id] = user_id
+        self._save_registry(registry)
         
         return {
             "document_id": document_id,
@@ -37,8 +52,11 @@ class DocumentManager:
             "chunks": processed_chunks
         }
     
-    def get_document(self, document_id: str) -> Optional[Dict]:
-        
+    def get_document(self, document_id: str, user_id: str) -> Optional[Dict]:
+        registry = self._load_registry()
+        if registry.get(document_id) != user_id:
+            return None
+            
         chunks_file = self.data_dir / f"{document_id}_chunks.json"
         
         if not chunks_file.exists():
@@ -66,9 +84,9 @@ class DocumentManager:
                 pass
         return name
     
-    def get_chunks(self, document_id: str, chunk_ids: Optional[List[int]] = None) -> Optional[List[Dict]]:
+    def get_chunks(self, document_id: str, user_id: str, chunk_ids: Optional[List[int]] = None) -> Optional[List[Dict]]:
        
-        document = self.get_document(document_id)
+        document = self.get_document(document_id, user_id)
         
         if document is None:
             return None
@@ -81,23 +99,34 @@ class DocumentManager:
         filtered_chunks = [chunk for chunk in chunks if chunk["chunk_id"] in chunk_ids]
         return filtered_chunks
     
-    def delete_document(self, document_id: str) -> bool:
+    def delete_document(self, document_id: str, user_id: str) -> bool:
+        registry = self._load_registry()
+        if registry.get(document_id) != user_id:
+            return False
 
         chunks_file = self.data_dir / f"{document_id}_chunks.json"
         
         if chunks_file.exists():
             chunks_file.unlink()
+            if document_id in registry:
+                del registry[document_id]
+                self._save_registry(registry)
             return True
         
         return False
     
-    def list_documents(self) -> List[Dict]:
+    def list_documents(self, user_id: str) -> List[Dict]:
 
         documents = []
+        registry = self._load_registry()
         
         for chunks_file in self.data_dir.glob("*_chunks.json"):
             document_id = chunks_file.stem.replace("_chunks", "")
-            document = self.get_document(document_id)
+            
+            if registry.get(document_id) != user_id:
+                continue
+                
+            document = self.get_document(document_id, user_id)
             
             if document:
                 documents.append({

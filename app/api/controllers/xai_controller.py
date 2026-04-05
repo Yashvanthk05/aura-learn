@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from app.core.security import get_current_user
+from app.models.schemas import User
 
 from app.models.schemas import (
     ExplainExtractiveRequest, ExplainExtractiveResponse, SentenceExplanation,
@@ -16,8 +18,8 @@ from . import service_registry as svc
 router = APIRouter()
 
 
-def _get_combined_text(document_id: str, chunk_ids=None) -> str:
-    chunks = svc.document_manager.get_chunks(document_id, chunk_ids)
+def _get_combined_text(document_id: str, user_id: str, chunk_ids=None) -> str:
+    chunks = svc.document_manager.get_chunks(document_id, user_id, chunk_ids)
     if chunks is None:
         raise HTTPException(status_code=404, detail="Document not found")
     if not chunks:
@@ -26,7 +28,7 @@ def _get_combined_text(document_id: str, chunk_ids=None) -> str:
 
 
 @router.post("/explain/extractive", response_model=ExplainExtractiveResponse)
-async def explain_extractive(request: ExplainExtractiveRequest):
+async def explain_extractive(request: ExplainExtractiveRequest, current_user: User = Depends(get_current_user)):
     """
     Explain extractive summarization decisions.
 
@@ -36,7 +38,7 @@ async def explain_extractive(request: ExplainExtractiveRequest):
     if svc.extractive_summarizer is None:
         raise HTTPException(status_code=503, detail="Extractive summarizer not available")
 
-    combined_text = _get_combined_text(request.document_id, request.chunk_ids)
+    combined_text = _get_combined_text(request.document_id, current_user.id, request.chunk_ids)
 
     try:
         xai = ExplainableExtractiveService(svc.extractive_summarizer)
@@ -76,15 +78,18 @@ async def explain_extractive(request: ExplainExtractiveRequest):
 
 
 @router.post("/explain/search", response_model=ExplainSearchResponse)
-async def explain_search(request: ExplainSearchRequest):
+async def explain_search(request: ExplainSearchRequest, current_user: User = Depends(get_current_user)):
     """
     Explain hybrid search results.
 
     Shows the scoring breakdown (FAISS, BM25, TF-IDF) for each result
     and provides human-readable explanations for ranking decisions.
     """
+    if not svc.document_manager.get_document(request.document_id, current_user.id):
+        raise HTTPException(status_code=404, detail="Document not found")
+        
     try:
-        vector_store = svc.get_or_create_vector_store(request.document_id)
+        vector_store = svc.get_or_create_vector_store(request.document_id, current_user.id)
     except HTTPException:
         raise
     except Exception as e:
@@ -114,7 +119,7 @@ async def explain_search(request: ExplainSearchRequest):
 
 
 @router.post("/explain/abstractive", response_model=ExplainAbstractiveResponse)
-async def explain_abstractive(request: ExplainAbstractiveRequest):
+async def explain_abstractive(request: ExplainAbstractiveRequest, current_user: User = Depends(get_current_user)):
     """
     Explain abstractive summarization decisions.
 
@@ -126,7 +131,7 @@ async def explain_abstractive(request: ExplainAbstractiveRequest):
             status_code=503, detail="Abstractive summarizer not available"
         )
 
-    combined_text = _get_combined_text(request.document_id, request.chunk_ids)
+    combined_text = _get_combined_text(request.document_id, current_user.id, request.chunk_ids)
 
     try:
         xai = ExplainableAbstractiveService(svc.abstractive_summarizer)

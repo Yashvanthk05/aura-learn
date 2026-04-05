@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException, File, UploadFile, Form
+from fastapi import APIRouter, HTTPException, File, UploadFile, Form, Depends
+from app.core.security import get_current_user
+from app.models.schemas import User
 from typing import Optional, List
 import uuid
 import shutil
@@ -14,8 +16,8 @@ router = APIRouter()
 
 
 @router.post("/summarize", response_model=SummarizeResponse)
-async def summarize_document(request: SummarizeRequest):
-    chunks = svc.document_manager.get_chunks(request.document_id, request.chunk_ids)
+async def summarize_document(request: SummarizeRequest, current_user: User = Depends(get_current_user)):
+    chunks = svc.document_manager.get_chunks(request.document_id, current_user.id, request.chunk_ids)
     if chunks is None:
         raise HTTPException(status_code=404, detail="Document not found")
     if not chunks:
@@ -61,7 +63,8 @@ async def summarize_and_generate_audio(
     num_sentences: Optional[int] = Form(None),
     max_length: Optional[int] = Form(150),
     min_length: Optional[int] = Form(40),
-    speaker_audio: Optional[UploadFile] = File(None)
+    speaker_audio: Optional[UploadFile] = File(None),
+    current_user: User = Depends(get_current_user)
 ):
     # Parse chunk_ids if provided as JSON string
     parsed_chunk_ids = None
@@ -72,7 +75,7 @@ async def summarize_and_generate_audio(
         except:
             parsed_chunk_ids = None
     
-    chunks = svc.document_manager.get_chunks(document_id, parsed_chunk_ids)
+    chunks = svc.document_manager.get_chunks(document_id, current_user.id, parsed_chunk_ids)
     if chunks is None:
         raise HTTPException(status_code=404, detail="Document not found")
     if not chunks:

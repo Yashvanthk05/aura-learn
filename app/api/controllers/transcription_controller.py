@@ -1,7 +1,9 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Form
+from fastapi import APIRouter, UploadFile, File, HTTPException, Form, Depends
+from app.core.security import get_current_user
+from app.models.schemas import User, TranscriptionResponse
 import app.api.controllers.service_registry as service_registry
 from app.core.config import settings
-from app.models.schemas import TranscriptionResponse
+
 import shutil
 from pathlib import Path
 import uuid
@@ -15,6 +17,7 @@ async def transcribe_media(
     num_sentences: int = Form(3),
     max_length: int = Form(150),
     min_length: int = Form(40),
+    current_user: User = Depends(get_current_user)
 ):
     """
     Transcribe an uploaded audio or video file.

@@ -12,7 +12,7 @@ class SessionManager:
         self.sessions_dir.mkdir(parents=True, exist_ok=True)
         self.active_sessions = {}
     
-    def create_session(self, document_id: str, user_metadata: Optional[Dict] = None) -> str:
+    def create_session(self, user_id: str, document_id: str, user_metadata: Optional[Dict] = None) -> str:
         
         session_id = str(uuid.uuid4())
         
@@ -21,6 +21,7 @@ class SessionManager:
             'document_id': document_id,
             'created_at': datetime.now().isoformat(),
             'updated_at': datetime.now().isoformat(),
+            'user_id': user_id,
             'messages': [],
             'metadata': user_metadata or {},
             'context_summary': None
@@ -32,7 +33,7 @@ class SessionManager:
         
         return session_id
     
-    def get_session(self, session_id: str) -> Optional[Dict]:
+    def get_session(self, session_id: str, user_id: str) -> Optional[Dict]:
         
         if session_id in self.active_sessions:
             return self.active_sessions[session_id]
@@ -42,6 +43,9 @@ class SessionManager:
             with open(session_file, 'r', encoding='utf-8') as f:
                 session_data = json.load(f)
                 
+                if session_data.get('user_id') != user_id:
+                    return None
+                    
                 self.active_sessions[session_id] = session_data
                 return session_data
         
@@ -50,13 +54,14 @@ class SessionManager:
     def add_message(
         self,
         session_id: str,
+        user_id: str,
         role: str,
         content: str,
         citations: Optional[List[Dict]] = None,
         metadata: Optional[Dict] = None
     ) -> bool:
         
-        session = self.get_session(session_id)
+        session = self.get_session(session_id, user_id)
         if not session:
             return False
         
@@ -79,11 +84,12 @@ class SessionManager:
     def get_conversation_history(
         self,
         session_id: str,
+        user_id: str,
         max_messages: Optional[int] = None,
         include_citations: bool = True
     ) -> List[Dict]:
         
-        session = self.get_session(session_id)
+        session = self.get_session(session_id, user_id)
         if not session:
             return []
         
@@ -103,11 +109,13 @@ class SessionManager:
     def get_context_for_query(
         self,
         session_id: str,
+        user_id: str,
         max_history: int = 5
     ) -> str:
         
         messages = self.get_conversation_history(
             session_id,
+            user_id,
             max_messages=max_history * 2,
             include_citations=False
         )
@@ -122,9 +130,9 @@ class SessionManager:
         
         return "\n".join(context_parts)
     
-    def update_context_summary(self, session_id: str, summary: str) -> bool:
+    def update_context_summary(self, session_id: str, user_id: str, summary: str) -> bool:
         
-        session = self.get_session(session_id)
+        session = self.get_session(session_id, user_id)
         if not session:
             return False
         
@@ -136,8 +144,10 @@ class SessionManager:
         
         return True
     
-    def delete_session(self, session_id: str) -> bool:
-       
+    def delete_session(self, session_id: str, user_id: str) -> bool:
+        session = self.get_session(session_id, user_id)
+        if not session: return False
+        
         if session_id in self.active_sessions:
             del self.active_sessions[session_id]
         
@@ -148,7 +158,7 @@ class SessionManager:
         
         return False
     
-    def list_sessions(self, document_id: Optional[str] = None) -> List[Dict]:
+    def list_sessions(self, user_id: str, document_id: Optional[str] = None) -> List[Dict]:
     
         sessions = []
         
@@ -156,6 +166,8 @@ class SessionManager:
             with open(session_file, 'r', encoding='utf-8') as f:
                 session = json.load(f)
                 
+                if session.get('user_id') != user_id:
+                    continue
                 if document_id and session.get('document_id') != document_id:
                     continue
                 

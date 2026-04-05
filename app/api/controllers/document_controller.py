@@ -1,6 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from app.core.security import get_current_user
+from app.models.schemas import User, DocumentInfoResponse, ChunkInfo
 
-from app.models.schemas import DocumentInfoResponse, ChunkInfo
+
 from app.core.config import settings
 from . import service_registry as svc
 
@@ -8,8 +10,8 @@ router = APIRouter()
 
 
 @router.get("/document/{document_id}", response_model=DocumentInfoResponse)
-async def get_document_info(document_id: str):
-    document = svc.document_manager.get_document(document_id)
+async def get_document_info(document_id: str, current_user: User = Depends(get_current_user)):
+    document = svc.document_manager.get_document(document_id, current_user.id)
     if document is None:
         raise HTTPException(status_code=404, detail="Document not found")
 
@@ -32,8 +34,8 @@ async def get_document_info(document_id: str):
 
 
 @router.delete("/document/{document_id}")
-async def delete_document(document_id: str):
-    success = svc.document_manager.delete_document(document_id)
+async def delete_document(document_id: str, current_user: User = Depends(get_current_user)):
+    success = svc.document_manager.delete_document(document_id, current_user.id)
     if not success:
         raise HTTPException(status_code=404, detail="Document not found")
 
@@ -44,6 +46,6 @@ async def delete_document(document_id: str):
 
 
 @router.get("/documents")
-async def list_documents():
-    documents = svc.document_manager.list_documents()
+async def list_documents(current_user: User = Depends(get_current_user)):
+    documents = svc.document_manager.list_documents(current_user.id)
     return {"documents": documents}

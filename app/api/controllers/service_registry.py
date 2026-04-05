@@ -45,10 +45,10 @@ def init_services():
     chat_service = RAGChatService(abstractive_summarizer=abstractive_summarizer)
     transcription_service = TranscriptionService()
 
-def get_or_create_vector_store(document_id: str) -> HybridVectorStore:
+def get_or_create_vector_store(document_id: str, user_id: str) -> HybridVectorStore:
     if document_id not in vector_stores:
         vector_store = HybridVectorStore()
-        document = document_manager.get_document(document_id)
+        document = document_manager.get_document(document_id, user_id)
         if document:
             vector_store.create_index(document['chunks'])
             vector_stores[document_id] = vector_store

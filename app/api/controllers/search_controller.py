@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from app.core.security import get_current_user
+from app.models.schemas import User
 
 from app.models.schemas import SearchRequest, SearchResponse, SearchResult
 from . import service_registry as svc
@@ -7,9 +9,12 @@ router = APIRouter()
 
 
 @router.post("/search", response_model=SearchResponse)
-async def search_document(request: SearchRequest):
+async def search_document(request: SearchRequest, current_user: User = Depends(get_current_user)):
+    if not svc.document_manager.get_document(request.document_id, current_user.id):
+        raise HTTPException(status_code=404, detail="Document not found")
+        
     try:
-        vector_store = svc.get_or_create_vector_store(request.document_id)
+        vector_store = svc.get_or_create_vector_store(request.document_id, current_user.id)
     except HTTPException:
         raise
     except Exception as e:

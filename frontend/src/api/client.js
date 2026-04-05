@@ -1,8 +1,17 @@
 const BASE = "/api/v1";
 
+const getHeaders = (customHeaders = {}) => {
+  const token = localStorage.getItem("access_token");
+  const headers = { "Content-Type": "application/json", ...customHeaders };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+};
+
 async function request(path, options = {}) {
   const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json", ...options.headers },
+    headers: getHeaders(options.headers),
     ...options,
   });
   if (!res.ok) {
@@ -17,7 +26,12 @@ export const getHealth = () => request("/health");
 export function uploadDocument(file) {
   const form = new FormData();
   form.append("file", file);
-  return fetch(`${BASE}/upload`, { method: "POST", body: form }).then(
+
+  const token = localStorage.getItem("access_token");
+  const headers = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  return fetch(`${BASE}/upload`, { method: "POST", body: form, headers }).then(
     async (r) => {
       if (!r.ok) {
         const err = await r.json().catch(() => ({ detail: r.statusText }));
@@ -85,9 +99,14 @@ export const summarizeAndAudio = (documentId, opts = {}) => {
   if (opts.chunkIds) form.append("chunk_ids", JSON.stringify(opts.chunkIds));
   if (opts.speakerAudio) form.append("speaker_audio", opts.speakerAudio);
 
+  const token = localStorage.getItem("access_token");
+  const headers = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
   return fetch(`${BASE}/summarize-and-audio`, {
     method: "POST",
     body: form,
+    headers,
   }).then(async (r) => {
     if (!r.ok) {
       const err = await r.json().catch(() => ({ detail: r.statusText }));
@@ -154,7 +173,12 @@ export function transcribeMedia(file, opts = {}) {
   form.append("num_sentences", String(opts.numSentences ?? 3));
   form.append("max_length", String(opts.maxLength ?? 150));
   form.append("min_length", String(opts.minLength ?? 40));
-  return fetch(`${BASE}/transcribe/`, { method: "POST", body: form }).then(
+
+  const token = localStorage.getItem("access_token");
+  const headers = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  return fetch(`${BASE}/transcribe/`, { method: "POST", body: form, headers }).then(
     async (r) => {
       if (!r.ok) {
         const err = await r.json().catch(() => ({ detail: r.statusText }));
@@ -164,3 +188,9 @@ export function transcribeMedia(file, opts = {}) {
     },
   );
 }
+
+export const googleLogin = (token) =>
+  request("/auth/google", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
