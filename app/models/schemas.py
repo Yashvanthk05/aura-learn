@@ -107,11 +107,56 @@ class CreateSessionRequest(BaseModel):
     metadata: Optional[dict] = None
 
 
+class CreateWorkspaceRequest(BaseModel):
+    title: Optional[str] = None
+
+
 class CreateSessionResponse(BaseModel):
     session_id: str
     document_id: str
     created_at: str
     message: str
+    title: Optional[str] = None
+    source_count: int = 0
+
+
+class SourceFileInfo(BaseModel):
+    source_id: str
+    filename: str
+    file_type: str
+    size_bytes: int
+    status: str
+    added_at: str
+    source_url: str
+
+
+class UploadSourceResponse(BaseModel):
+    session_id: str
+    document_id: str
+    source: SourceFileInfo
+    total_sources: int
+    total_chunks: int
+    message: str
+
+
+class SessionSourcesResponse(BaseModel):
+    session_id: str
+    sources: List[SourceFileInfo]
+
+
+class SessionListItem(BaseModel):
+    session_id: str
+    document_id: str
+    created_at: str
+    updated_at: str
+    message_count: int
+    title: str
+    source_count: int
+    metadata: Optional[Dict[str, Any]] = None
+
+
+class SessionListResponse(BaseModel):
+    sessions: List[SessionListItem]
 
 
 class Citation(BaseModel):
@@ -166,6 +211,8 @@ class SessionInfoResponse(BaseModel):
     created_at: str
     updated_at: str
     message_count: int
+    title: Optional[str] = None
+    source_count: int = 0
     metadata: Optional[dict] = None
 
 

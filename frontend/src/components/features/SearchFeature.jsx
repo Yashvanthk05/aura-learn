@@ -60,7 +60,7 @@ export default function SearchFeature() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder='Search document...'
+          placeholder='Search across chat sources...'
           className='flex-1 bg-transparent outline-none text-xs'
           style={{ color: "var(--fg-primary)" }}
         />

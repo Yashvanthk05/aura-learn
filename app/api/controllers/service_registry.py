@@ -55,3 +55,9 @@ def get_or_create_vector_store(document_id: str, user_id: str) -> HybridVectorSt
         else:
             raise HTTPException(status_code=404, detail="Document not found")
     return vector_stores[document_id]
+
+
+def refresh_vector_store(document_id: str, user_id: str) -> HybridVectorStore:
+    if document_id in vector_stores:
+        del vector_stores[document_id]
+    return get_or_create_vector_store(document_id, user_id)

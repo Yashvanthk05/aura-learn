@@ -8,6 +8,7 @@ export default function ChatPanel() {
   const [input, setInput] = useState("");
   const [modelType, setModelType] = useState("extractive");
   const [includeHistory, setIncludeHistory] = useState(true);
+  const hasSources = state.sources.length > 0;
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -18,18 +19,9 @@ export default function ChatPanel() {
     scrollToBottom();
   }, [state.messages]);
 
-  useEffect(() => {
-    if (state.activeDocumentId && !state.sessionId) {
-      api
-        .createChatSession(state.activeDocumentId)
-        .then((res) => dispatch({ type: "SET_SESSION", payload: res.session_id }))
-        .catch(() => {});
-    }
-  }, [state.activeDocumentId, state.sessionId, dispatch]);
-
   const handleSend = useCallback(async () => {
     const q = input.trim();
-    if (!q || !state.sessionId || state.isChatLoading) return;
+    if (!q || !state.sessionId || state.isChatLoading || !hasSources) return;
 
     setInput("");
     dispatch({
@@ -53,7 +45,7 @@ export default function ChatPanel() {
     } catch (err) {
       dispatch({ type: "SET_CHAT_ERROR", payload: err.message });
     }
-  }, [input, state.sessionId, state.isChatLoading, modelType, includeHistory, dispatch]);
+  }, [input, state.sessionId, state.isChatLoading, modelType, includeHistory, dispatch, hasSources]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -62,7 +54,7 @@ export default function ChatPanel() {
     }
   };
 
-  if (!state.activeDocumentId) {
+  if (!state.sessionId || !state.activeChatId) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8">
         <div
@@ -82,7 +74,7 @@ export default function ChatPanel() {
             className="text-sm leading-relaxed"
             style={{ color: "var(--fg-secondary)", fontSize: 12 }}
           >
-            Upload a PDF source from the left panel to start chatting, summarizing, and generating audio.
+            Create a new chat from the left panel and upload one or more files to begin.
           </p>
         </div>
       </div>
@@ -102,7 +94,7 @@ export default function ChatPanel() {
         >
           Chat
         </span>
-        {state.activeDocument && (
+        {state.activeChat && (
           <span
             className="text-xs px-2 py-0.5 rounded-md"
             style={{
@@ -112,7 +104,7 @@ export default function ChatPanel() {
               fontSize: 10,
             }}
           >
-            {state.activeDocument.filename}
+            {state.activeChat.title || "New Chat"} • {state.sources.length} sources
           </span>
         )}
         <div className="flex-1" />
@@ -145,7 +137,9 @@ export default function ChatPanel() {
               className="text-sm text-center"
               style={{ color: "var(--fg-muted)", fontSize: 12 }}
             >
-              Ask anything about your document
+              {hasSources
+                ? "Ask anything about your uploaded sources"
+                : "Upload one or more files to this chat to begin"}
             </p>
           </div>
         )}
@@ -281,6 +275,11 @@ export default function ChatPanel() {
         className="px-4 py-3 border-t shrink-0"
         style={{ borderColor: "var(--border)", background: "var(--bg-surface)" }}
       >
+        {!hasSources && (
+          <p className='text-xs mb-2 px-1' style={{ color: "var(--fg-muted)" }}>
+            This chat has no uploaded sources yet.
+          </p>
+        )}
         <div
           className="flex items-end gap-2 rounded-xl px-4 py-2"
           style={{
@@ -293,8 +292,9 @@ export default function ChatPanel() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask about your document..."
+            placeholder={hasSources ? "Ask about your sources..." : "Upload files to start chatting..."}
             rows={1}
+            disabled={!hasSources}
             className="flex-1 bg-transparent resize-none outline-none text-sm py-1"
             style={{
               color: "var(--fg-primary)",
@@ -303,19 +303,19 @@ export default function ChatPanel() {
           />
           <button
             onClick={handleSend}
-            disabled={!input.trim() || state.isChatLoading}
+            disabled={!input.trim() || state.isChatLoading || !hasSources}
             className="p-2 rounded-lg transition-colors duration-150 shrink-0"
             style={{
               background:
-                input.trim() && !state.isChatLoading
+                input.trim() && !state.isChatLoading && hasSources
                   ? "var(--accent)"
                   : "var(--bg-overlay)",
               color:
-                input.trim() && !state.isChatLoading
+                input.trim() && !state.isChatLoading && hasSources
                   ? "#fff"
                   : "var(--fg-muted)",
               cursor:
-                input.trim() && !state.isChatLoading
+                input.trim() && !state.isChatLoading && hasSources
                   ? "pointer"
                   : "not-allowed",
             }}

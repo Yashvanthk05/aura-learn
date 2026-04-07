@@ -55,6 +55,95 @@ export const createChatSession = (documentId) =>
     body: JSON.stringify({ document_id: documentId }),
   });
 
+export const createWorkspaceChat = (title) =>
+  request("/chat/workspace", {
+    method: "POST",
+    body: JSON.stringify({ title }),
+  });
+
+export const listChatSessions = () => request("/chat/sessions");
+
+export const getSessionInfo = (sessionId) => request(`/chat/session/${sessionId}`);
+
+export const getSessionSources = (sessionId) =>
+  request(`/chat/session/${sessionId}/sources`);
+
+export function uploadSourceToSession(sessionId, file, opts = {}) {
+  const form = new FormData();
+  form.append("file", file);
+
+  const token = localStorage.getItem("access_token");
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${BASE}/chat/session/${sessionId}/sources`, true);
+
+    if (token) {
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    }
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable && typeof opts.onProgress === "function") {
+        const pct = Math.round((event.loaded / event.total) * 100);
+        opts.onProgress(pct);
+      }
+    };
+
+    xhr.onerror = () => {
+      reject(new Error("Network error during upload"));
+    };
+
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState !== XMLHttpRequest.DONE) return;
+
+      let payload = null;
+      if (xhr.responseText) {
+        try {
+          payload = JSON.parse(xhr.responseText);
+        } catch {
+          payload = null;
+        }
+      }
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(payload);
+        return;
+      }
+
+      reject(new Error(payload?.detail || "Upload failed"));
+    };
+
+    xhr.send(form);
+  });
+}
+
+export async function getSourceFileBlob(sessionId, sourceId) {
+  const token = localStorage.getItem("access_token");
+  const headers = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(`${BASE}/chat/session/${sessionId}/source/${sourceId}`, {
+    method: "GET",
+    headers,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || "Failed to fetch source file");
+  }
+
+  const blob = await res.blob();
+  const contentType = res.headers.get("Content-Type") || "application/octet-stream";
+  const disposition = res.headers.get("Content-Disposition") || "";
+  const filenameMatch = disposition.match(/filename="?([^";]+)"?/i);
+
+  return {
+    blob,
+    contentType,
+    filename: filenameMatch?.[1] || `source-${sourceId}`,
+  };
+}
+
 export const chatQuery = (sessionId, query, opts = {}) =>
   request("/chat/query", {
     method: "POST",

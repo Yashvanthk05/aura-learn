@@ -5,18 +5,15 @@ import {
   Search,
   BrainCircuit,
   Loader2,
-  Mic,
 } from "lucide-react";
 import { useApp } from "../store/AppContext";
 import SummarizeFeature from "./features/SummarizeFeature";
 import AudioFeature from "./features/AudioFeature";
 import SearchFeature from "./features/SearchFeature";
 import XaiFeature from "./features/XaiFeature";
-import TranscriptionFeature from "./features/TranscriptionFeature";
 
 const TABS = [
   { id: "summarize", label: "Summarize", icon: FileText },
-  { id: "transcribe", label: "Transcribe", icon: Mic },
   { id: "audio", label: "Audio", icon: AudioLines },
   { id: "search", label: "Search", icon: Search },
   { id: "xai", label: "Explain", icon: BrainCircuit },
@@ -24,7 +21,6 @@ const TABS = [
 
 const FEATURE_COMPONENTS = {
   summarize: SummarizeFeature,
-  transcribe: TranscriptionFeature,
   audio: AudioFeature,
   search: SearchFeature,
   xai: XaiFeature,
@@ -32,19 +28,19 @@ const FEATURE_COMPONENTS = {
 
 export default function FeaturesPanel({ width = 320, onResizeStart }) {
   const { state, dispatch } = useApp();
-  const [tab, setTab] = useState("transcribe");
+  const [tab, setTab] = useState("summarize");
+  const hasReadyWorkspace = Boolean(state.activeDocumentId) && state.sources.length > 0;
 
   const selectTab = (id) => {
-    // Don't allow selecting document-dependent features if no document is active
-    if (!state.activeDocumentId && id !== "transcribe") {
+    if (!hasReadyWorkspace) {
       return;
     }
     setTab(id);
     dispatch({ type: "SET_ACTIVE_FEATURE", payload: id });
   };
 
-  const FeatureComponent = FEATURE_COMPONENTS[tab] || TranscriptionFeature;
-  const requiresDocument = tab !== "transcribe";
+  const FeatureComponent = FEATURE_COMPONENTS[tab] || SummarizeFeature;
+  const requiresDocument = true;
 
   return (
     <aside
@@ -77,8 +73,7 @@ export default function FeaturesPanel({ width = 320, onResizeStart }) {
       >
         {TABS.map((tabItem) => {
           const TabIcon = tabItem.icon;
-          const isDisabled =
-            !state.activeDocumentId && tabItem.id !== "transcribe";
+          const isDisabled = !hasReadyWorkspace;
 
           return (
             <button
@@ -126,12 +121,12 @@ export default function FeaturesPanel({ width = 320, onResizeStart }) {
         )}
 
         <div style={{ display: state.isFeatureLoading ? "none" : "block" }}>
-          {!state.activeDocumentId && requiresDocument ? (
+          {!hasReadyWorkspace && requiresDocument ? (
             <p
               className='text-xs text-center py-8'
               style={{ color: "var(--fg-muted)" }}
             >
-              Select a document to use this feature
+              Select a chat with uploaded sources to use this feature
             </p>
           ) : (
             <FeatureComponent />

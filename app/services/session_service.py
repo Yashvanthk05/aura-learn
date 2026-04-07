@@ -32,11 +32,22 @@ class SessionManager:
         self._save_session(session_id, session_data)
         
         return session_id
+
+    @staticmethod
+    def _ensure_metadata(session: Dict) -> Dict:
+        metadata = session.setdefault('metadata', {})
+        metadata.setdefault('title', 'New Chat')
+        metadata.setdefault('sources', [])
+        return metadata
     
     def get_session(self, session_id: str, user_id: str) -> Optional[Dict]:
         
         if session_id in self.active_sessions:
-            return self.active_sessions[session_id]
+            session = self.active_sessions[session_id]
+            if session.get('user_id') != user_id:
+                return None
+            self._ensure_metadata(session)
+            return session
         
         session_file = self.sessions_dir / f"{session_id}.json"
         if session_file.exists():
@@ -45,6 +56,8 @@ class SessionManager:
                 
                 if session_data.get('user_id') != user_id:
                     return None
+
+                self._ensure_metadata(session_data)
                     
                 self.active_sessions[session_id] = session_data
                 return session_data
@@ -80,6 +93,35 @@ class SessionManager:
         self._save_session(session_id, session)
         
         return True
+
+    def add_source(self, session_id: str, user_id: str, source: Dict) -> bool:
+        session = self.get_session(session_id, user_id)
+        if not session:
+            return False
+
+        metadata = self._ensure_metadata(session)
+        sources = metadata.setdefault('sources', [])
+        sources.append(source)
+        session['updated_at'] = datetime.now().isoformat()
+
+        self.active_sessions[session_id] = session
+        self._save_session(session_id, session)
+        return True
+
+    def get_sources(self, session_id: str, user_id: str) -> List[Dict]:
+        session = self.get_session(session_id, user_id)
+        if not session:
+            return []
+
+        metadata = self._ensure_metadata(session)
+        return metadata.get('sources', [])
+
+    def get_source(self, session_id: str, user_id: str, source_id: str) -> Optional[Dict]:
+        sources = self.get_sources(session_id, user_id)
+        for source in sources:
+            if source.get('source_id') == source_id:
+                return source
+        return None
     
     def get_conversation_history(
         self,
@@ -170,13 +212,19 @@ class SessionManager:
                     continue
                 if document_id and session.get('document_id') != document_id:
                     continue
+
+                metadata = session.get('metadata') or {}
+                sources = metadata.get('sources') or []
                 
                 sessions.append({
                     'session_id': session['session_id'],
                     'document_id': session['document_id'],
                     'created_at': session['created_at'],
                     'updated_at': session['updated_at'],
-                    'message_count': len(session['messages'])
+                    'message_count': len(session['messages']),
+                    'title': metadata.get('title', 'New Chat'),
+                    'source_count': len(sources),
+                    'metadata': metadata,
                 })
         
         sessions.sort(key=lambda x: x['updated_at'], reverse=True)

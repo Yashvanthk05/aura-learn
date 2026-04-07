@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     
     # Auth Configurations
     GOOGLE_CLIENT_ID: str
-    JWT_SECRET: str
+    JWT_SECRET: str = "supersecretkey"
     JWT_ALGORITHM: str = "HS256"
 
     

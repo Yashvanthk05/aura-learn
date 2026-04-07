@@ -4,9 +4,15 @@ const AppContext = createContext(null);
 
 const initialState = {
   user: null,
-  documents: [],
+  chats: [],
+  activeChatId: null,
+  activeChat: null,
+  sources: [],
+
+  isCreatingChat: false,
+  createChatError: null,
+
   activeDocumentId: null,
-  activeDocument: null,
   isUploading: false,
   uploadError: null,
 
@@ -30,50 +36,85 @@ function reducer(state, action) {
       return {
         ...state,
         user: null,
-        documents: [],
+        chats: [],
+        activeChatId: null,
+        activeChat: null,
+        sources: [],
         activeDocumentId: null,
-        activeDocument: null,
         sessionId: null,
         messages: [],
         featureResult: null,
+        createChatError: null,
       };
 
-    case "SET_DOCUMENTS":
-      return { ...state, documents: action.payload };
+    case "SET_CHAT_SESSIONS":
+      return { ...state, chats: action.payload };
 
-    case "ADD_DOCUMENT":
+    case "ADD_CHAT_SESSION":
       return {
         ...state,
-        documents: [...state.documents, action.payload],
-        isUploading: false,
-        uploadError: null,
+        chats: [action.payload, ...state.chats.filter((c) => c.session_id !== action.payload.session_id)],
       };
 
-    case "REMOVE_DOCUMENT":
-      return {
-        ...state,
-        documents: state.documents.filter(
-          (d) => d.document_id !== action.payload
-        ),
-        activeDocumentId:
-          state.activeDocumentId === action.payload
-            ? null
-            : state.activeDocumentId,
-        activeDocument:
-          state.activeDocumentId === action.payload
-            ? null
-            : state.activeDocument,
-      };
+    case "UPDATE_CHAT_SESSION": {
+      const { sessionId, patch } = action.payload;
+      const chats = state.chats.map((chat) =>
+        chat.session_id === sessionId ? { ...chat, ...patch } : chat,
+      );
 
-    case "SET_ACTIVE_DOCUMENT":
+      const isActive = state.activeChat?.session_id === sessionId;
       return {
         ...state,
-        activeDocumentId: action.payload.id,
-        activeDocument: action.payload.data,
-        sessionId: null,
+        chats,
+        activeChat: isActive ? { ...state.activeChat, ...patch } : state.activeChat,
+      };
+    }
+
+    case "SET_ACTIVE_CHAT": {
+      if (!action.payload) {
+        return {
+          ...state,
+          activeChatId: null,
+          activeChat: null,
+          sessionId: null,
+          activeDocumentId: null,
+          messages: [],
+          sources: [],
+          featureResult: null,
+          featureError: null,
+        };
+      }
+
+      return {
+        ...state,
+        activeChatId: action.payload.session_id,
+        activeChat: action.payload,
+        sessionId: action.payload.session_id,
+        activeDocumentId: action.payload.document_id,
         messages: [],
         featureResult: null,
         featureError: null,
+      };
+    }
+
+    case "SET_SOURCES":
+      return { ...state, sources: action.payload };
+
+    case "ADD_SOURCE":
+      return { ...state, sources: [...state.sources, action.payload] };
+
+    case "SET_CREATING_CHAT":
+      return {
+        ...state,
+        isCreatingChat: action.payload,
+        createChatError: action.payload ? null : state.createChatError,
+      };
+
+    case "SET_CREATE_CHAT_ERROR":
+      return {
+        ...state,
+        isCreatingChat: false,
+        createChatError: action.payload,
       };
 
     case "SET_UPLOADING":

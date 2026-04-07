@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { Sun, Moon, User } from "lucide-react";
+import { Sun, Moon, Library } from "lucide-react";
 import SourcesPanel from "./components/SourcesPanel";
 import ChatPanel from "./components/ChatPanel";
 import FeaturesPanel from "./components/FeaturesPanel";
+import SourcesLibraryModal from "./components/SourcesLibraryModal";
 import { useApp } from "./store/AppContext";
 import * as api from "./api/client";
 import { GoogleLogin } from "@react-oauth/google";
@@ -32,6 +33,7 @@ export default function App() {
   const [theme, setTheme] = useState(
     () => localStorage.getItem("theme") || "dark",
   );
+  const [isSourcesModalOpen, setIsSourcesModalOpen] = useState(false);
   const [sourcesWidth, setSourcesWidth] = useState(() =>
     getStoredWidth(SOURCE_WIDTH_KEY, DEFAULT_SOURCE_WIDTH),
   );
@@ -127,15 +129,10 @@ export default function App() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (!state.user) return;
-
-    api
-      .listDocuments()
-      .then((res) =>
-        dispatch({ type: "SET_DOCUMENTS", payload: res.documents || [] }),
-      )
-      .catch(() => { });
-  }, [dispatch, state.user]);
+    if (!state.user || !state.activeChatId || state.sources.length === 0) {
+      setIsSourcesModalOpen(false);
+    }
+  }, [state.activeChatId, state.sources.length, state.user]);
 
   const handleGoogleSuccess = async (credentialResponse) => {
     try {
@@ -182,6 +179,21 @@ export default function App() {
           </span>
         </div>
         <div className='flex items-center gap-2.5'>
+          {state.user && state.activeChatId && state.sources.length > 0 && (
+            <button
+              onClick={() => setIsSourcesModalOpen(true)}
+              className='w-8 h-8 rounded-lg flex items-center justify-center'
+              style={{
+                background: "var(--bg-elevated)",
+                color: "var(--fg-secondary)",
+                border: "1px solid var(--border)",
+              }}
+              title='View uploaded sources'
+            >
+              <Library size={14} />
+            </button>
+          )}
+
           <button
             onClick={toggleTheme}
             className='w-8 h-8 rounded-lg flex items-center justify-center'
@@ -230,7 +242,7 @@ export default function App() {
           <div className="absolute inset-0 flex flex-col items-center justify-center z-50 bg-[var(--bg-base)]">
             <h2 className="text-2xl font-bold mb-4" style={{ color: "var(--fg-primary)" }}>Welcome to AuraLearn</h2>
             <p className="mb-6 mb-8 text-center max-w-md" style={{ color: "var(--fg-secondary)" }}>
-              Please sign in with your Google account to manage your personalized documents
+              Please sign in with your Google account to manage your personalized chat workspaces
             </p>
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
@@ -251,6 +263,13 @@ export default function App() {
           onResizeStart={() => setResizingPanel("features")}
         />
       </div>
+
+      <SourcesLibraryModal
+        isOpen={isSourcesModalOpen}
+        onClose={() => setIsSourcesModalOpen(false)}
+        sessionId={state.sessionId}
+        sources={state.sources}
+      />
     </div>
   );
 }
