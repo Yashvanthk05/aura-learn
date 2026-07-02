@@ -15,7 +15,6 @@ security = HTTPBearer(auto_error=False)
 
 def verify_google_token(token: str) -> Optional[dict]:
     try:
-        # Avoid verifying client ID in dev if we allow a placeholder, but normally we should check it
         idinfo = id_token.verify_oauth2_token(
             token, requests.Request(), 
             settings.GOOGLE_CLIENT_ID if settings.GOOGLE_CLIENT_ID != "placeholder_google_client_id.apps.googleusercontent.com" else None
