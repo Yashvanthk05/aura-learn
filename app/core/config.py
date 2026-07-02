@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     
     # Auth Configurations
     GOOGLE_CLIENT_ID: str
+    PORT: int = 8000
     JWT_SECRET: str = "supersecretkey"
     JWT_ALGORITHM: str = "HS256"
 
@@ -48,7 +49,7 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 
-settings = Settings()
+    settings = Settings()
 
 settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 settings.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
