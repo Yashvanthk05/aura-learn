@@ -21,3 +21,4 @@ python-docx
 lime
 shap
 matplotlib
+jwt

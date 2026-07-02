@@ -1,0 +1,15 @@
+export UV_CACHE_DIR="/media/yashix/New Volume2/.cache/uv"
+export XDG_CACHE_HOME="/media/yashix/New Volume2/.cache"
+export HF_HOME="/media/yashix/New Volume1/.cache/huggingface"
+export TRANSFORMERS_CACHE="/media/yashix/New Volume2/.cache/huggingface/transformers"
+export TORCH_HOME="/media/yashix/New Volume2/.cache/torch"
+export NLTK_DATA="/media/yashix/New Volume2/.cache/nltk"
+
+export BASE_CACHE="/media/yashix/New Volume2/.cache"
+
+export UV_CACHE_DIR="$BASE_CACHE/uv"
+export XDG_CACHE_HOME="$BASE_CACHE"
+export HF_HOME="$BASE_CACHE/huggingface"
+export TRANSFORMERS_CACHE="$HF_HOME/transformers"
+export TORCH_HOME="$BASE_CACHE/torch"
+export NLTK_DATA="$BASE_CACHE/nltk"
