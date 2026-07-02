@@ -49,7 +49,8 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 
-    settings = Settings()
+
+settings = Settings()
 
 settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 settings.OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
