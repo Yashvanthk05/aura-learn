@@ -1,24 +1,47 @@
+# Web Framework & Server
 fastapi
 uvicorn
 python-multipart
+
+# Data Validation & Configuration
 pydantic
 pydantic-settings
+
+# Machine Learning & Deep Learning
 torch
 transformers
-sentencepiece
 sentence-transformers
+sentencepiece
 nltk
 numpy
-PyMuPDF
-Pillow
+scikit-learn
+scipy
+
+# Search & Indexing
 faiss-cpu
 rank-bm25
-scikit-learn
-coqui-tts
-scipy
+
+# Document Processing
+PyMuPDF
 python-pptx
 python-docx
-lime
+Pillow
+
+# Text-to-Speech
+coqui-tts
+
+# Audio Processing
+openai-whisper
+ffmpeg-python
+
+# Explainability & Interpretability
 shap
+lime
+captum
+
+# Authentication & JWT
+pyjwt
+google-auth-oauthlib
+
+# Visualization
 matplotlib
-jwt
